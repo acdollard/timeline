@@ -1,27 +1,34 @@
 ---
-import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
 import collage from "../assets/collage.png";
 import { Image } from "astro:assets";
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout>
-  <div class="max-w-screen-xl mx-auto flex flex-row py-10">
+  <div class="mx-auto flex flex-row py-10">
     <div class="w-1/2">
       <h1>Share your story.</h1>
       <br />
       <h1>preserve your memories.</h1>
       <br />
       <h1>Build Your Timeline.</h1>
-      <button>
-        <a href="/summary">Go To My Timeline</a>
-      </button>
+      <a href="/summary">
+        <button
+          class="bg-primary text-white px-4 py-2 rounded-md cursor-pointer"
+        >
+          Go To My Timeline
+        </button>
+      </a>
+      <a href="/about">
+        <button
+          class="bg-secondary-blue text-white px-4 py-2 rounded-md cursor-pointer"
+        >
+          Read Our Story
+        </button>
+      </a>
     </div>
     <div class="w-1/2">
-      <Image src={collage} alt="Collage" />
+      <Image src={collage} width={480} alt="Collage" />
     </div>
   </div>
 </Layout>

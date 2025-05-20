@@ -1,0 +1,14 @@
+---
+import { Image } from "astro:assets";
+import logo from "../assets/logo.svg";
+---
+
+<nav class="flex flex-row justify-between items-center py-4 w-full">
+  <a href="/">
+    <Image src={logo} alt="Logo" width={400} />
+  </a>
+  <ul class="flex flex-row justify-between items-center text-white gap-4">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about">About</a></li>
+  </ul>
+</nav>
