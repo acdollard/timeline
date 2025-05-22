@@ -2,9 +2,18 @@
 
 ---
 
-<div class="bg-white h-1 flex flex-row"></div>
+<div class="timeline-container flex flex-col h-auto">
+  <div id="timeline-line" class="bg-white h-1 flex flex-row"></div>
 
-<div class="flex flex-col h-auto">
-  <div class="event h-6 w-6 bg-green-500 rounded-full"></div>
-  <div class="h-20 w-0.5 bg-white translate-x-3"></div>
+  <div id="timeline-items" class="flex flex-row h-auto mx-1">
+    <div class="flex flex-col h-auto">
+      <div class="relative">
+        <div
+          class="event h-6 w-6 hover:h-10 hover:w-10 bg-green-500 rounded-full transition-all duration-200 absolute left-1/2 -translate-x-1/2"
+        >
+        </div>
+        <div class="h-20 w-0.5 bg-white mx-auto"></div>
+      </div>
+    </div>
+  </div>
 </div>
