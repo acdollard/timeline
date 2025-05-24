@@ -1,0 +1,30 @@
+[
+  {
+    "id": 0,
+    "name": "Birth",
+    "description": "You were born",
+    "date": "1993-10-12",
+    "type": "birth"
+  },
+  {
+    "id": 1,
+    "name": "Start School",
+    "description": "Description 1",
+    "date": "1998-01-01",
+    "type": "school"
+  },
+  {
+    "id": 2,
+    "name": "Visit Ireland",
+    "description": "Description 2",
+    "date": "2009-01-02",
+    "type": "travel"
+  },
+  {
+    "id": 3,
+    "name": "Meet Kelby",
+    "description": "Description 3",
+    "date": "2021-02-02",
+    "type": "relationships"
+  }
+]
