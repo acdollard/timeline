@@ -8,15 +8,15 @@
   },
   {
     "id": 1,
-    "name": "Start School",
+    "name": "Start Elementary School at Henderson Mill",
     "description": "Description 1",
-    "date": "1998-01-01",
+    "date": "1998-05-01",
     "type": "school"
   },
   {
     "id": 2,
-    "name": "Visit Ireland",
-    "description": "Description 2",
+    "name": "Visit Ireland w/ Family",
+    "description": "spent 2 weeks traveling around visiting Dublin, Kilkenny and Dingle among others. Saw Cliffs of Moher and Book of Kells.",
     "date": "2009-01-02",
     "type": "travel"
   },
@@ -24,7 +24,84 @@
     "id": 3,
     "name": "Meet Kelby",
     "description": "Description 3",
-    "date": "2021-02-02",
+    "date": "2024-02-02",
     "type": "relationships"
+  },
+  {
+    "id": 4,
+    "name": "Start Middle School at Henderson Middle",
+    "description": "Description 4",
+    "date": "2004-05-02",
+    "type": "school"
+  },
+  {
+    "id": 5,
+    "name": "Start High School at Lakeside High",
+    "description": "Description 5",
+    "date": "2007-05-02",
+    "type": "school"
+  },
+  {
+    "id": 6,
+    "name": "Visit South Africa w/ Family",
+    "description": "Description 6",
+    "date": "2010-05-02",
+    "type": "travel"
+  },
+  {
+    "id": 7,
+    "name": "Start working at King of Pops",
+    "description": "Description 7",
+    "date": "2016-05-02",
+    "type": "career"
+  },
+  {
+    "id": 8,
+    "name": "Start college at Emory University",
+    "description": "Description 7",
+    "date": "2016-05-02",
+    "type": "school"
+  },
+  {
+    "id": 9,
+    "name": "Start coding bootcamp at Vanderbilt",
+    "description": "Description 7",
+    "date": "2019-10-01",
+    "type": "career"
+  },
+  {
+    "id": 10,
+    "name": "Move to Nashville",
+    "description": "Description 7",
+    "date": "2017-06-02",
+    "type": "move"
+  },
+  {
+    "id": 11,
+    "name": "Move to Atlanta",
+    "description": "Description 7",
+    "date": "1998-02-02",
+    "type": "move"
+  },
+  {
+    "id": 12,
+    "name": "Got Patch",
+    "description": "Description 7",
+    "date": "2020-8-02",
+    "type": "pets"
+  },
+  {
+    "id": 13,
+    "name": "Ran Nashville Half Marathon",
+    "description": "Description 7",
+    "date": "2025-3-02",
+    "type": "bucket-list"
+  },
+  {
+    "id": 14,
+    "name": "Started Jiu Jitsu",
+    "description": "Description 7",
+    "date": "2021-6-02",
+    "type": "hobbies"
   }
 ]

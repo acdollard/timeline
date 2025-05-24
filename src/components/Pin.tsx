@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { getPinColor } from '../utils/pinColors';
+import type { EventType } from '../utils/pinColors';
 
 interface TimelineEvent {
   id: number;
   name: string;
   description: string;
   date: string;
-  type: string;
+  type: EventType;
   position?: number;
 }
 
@@ -21,21 +23,6 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false }) => {
     month: 'long',
     day: 'numeric'
   });
-
-  const getPinColor = (type: string) => {
-    switch (type) {
-      case 'birth':
-        return 'bg-white';
-      case 'school':
-        return 'bg-blue-500';
-      case 'travel':
-        return 'bg-yellow-500';
-      case 'relationships':
-        return 'bg-pink-500';
-      default:
-        return 'bg-green-500';
-    }
-  };
 
   return (
     <div className="pin relative">
