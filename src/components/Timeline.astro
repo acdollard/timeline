@@ -25,17 +25,13 @@ const eventsWithPosition = data.map((item) => {
 });
 ---
 
-<div class="timeline-container flex flex-col h-auto">
+<div class="timeline-container flex flex-col h-auto rotate-90 md:rotate-0">
   <div id="timeline-line" class="bg-white h-1 flex flex-row relative">
     {
       eventsWithPosition.map((item, index) => (
         <div
           class={`flex flex-col h-auto absolute ${
-            item.type === "birth"
-              ? "-translate-y-2.5"
-              : index % 2 === 0
-                ? ""
-                : "rotate-180 origin-top"
+            item.type === "birth" ? "-translate-y-2.5" : "-translate-y-full"
           }`}
           style={`left: ${item.position}%; transform: translateX(-50%)`}
         >
