@@ -40,7 +40,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false }) => {
   return (
     <div className="pin relative">
       <div
-        className={`event h-6 w-6 hover:h-10 hover:w-10 ${getPinColor(event.type)} rounded-full transition-all duration-200 absolute left-1/2 -translate-x-1/2 cursor-pointer`}
+        className={`event h-6 w-6 hover:scale-150 ${getPinColor(event.type)} rounded-full transition-all duration-200 absolute left-1/2 -translate-x-1/2 cursor-pointer`}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
       />
