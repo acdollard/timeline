@@ -1,25 +1,24 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Timeline from "../components/Timeline.astro";
-import TimelineFilters from "../components/TimelineFilters";
+import TimelineContainer from "../components/TimelineContainer";
+import data from "../data.json";
+import type { EventType } from "../utils/pinColors";
+
+// Initialize with all event types selected
+const initialEventTypes: EventType[] = [
+  "birth",
+  "school",
+  "travel",
+  "relationships",
+  "move",
+  "career",
+  "pets",
+  "bucket-list",
+  "hobbies",
+];
 ---
 
 <Layout>
   <h1 class="text-white text-2xl font-bold text-center">Summary</h1>
-  <div class="w-full h-[80vh] flex flex-col justify-center">
-    <div class="my-auto">
-      <Timeline />
-    </div>
-  </div>
-  <TimelineFilters
-    client:load
-    onFilterChange={(types) => {
-      // Handle filter changes
-      console.log("Filtered types:", types);
-    }}
-    onAddClick={() => {
-      // Handle add click
-      console.log("Add clicked");
-    }}
-  />
+  <TimelineContainer client:load events={data} />
 </Layout>
