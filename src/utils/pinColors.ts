@@ -5,21 +5,21 @@ export const getPinColor = (type: EventType): string => {
     case 'birth':
       return 'bg-white';
     case 'school':
-      return 'bg-blue-500';
+      return 'bg-gradient-to-r from-blue-500 to-blue-700 ';
     case 'travel':
-      return 'bg-red-500';
+      return 'bg-gradient-to-r from-red-500 to-red-700';
     case 'relationships':
-      return 'bg-pink-500';
+      return 'bg-gradient-to-r from-pink-500 to-pink-700';
     case 'move':
-      return 'bg-purple-500';
+      return 'bg-gradient-to-r from-purple-500 to-purple-700';
     case 'career':
-      return 'bg-green-500';
+      return 'bg-gradient-to-r from-green-500 to-green-700';
     case 'pets':
-      return 'bg-yellow-500';
+      return 'bg-gradient-to-r from-yellow-500 to-yellow-700';
     case 'bucket-list':
-      return 'bg-orange-500';
+      return 'bg-gradient-to-r from-orange-500 to-orange-700';
     case 'hobbies':
-      return 'bg-teal-500';
+      return 'bg-gradient-to-r from-teal-500 to-teal-700';
     default:
       return 'bg-gray-500';
   }

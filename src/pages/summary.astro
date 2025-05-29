@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Timeline from "../components/Timeline.astro";
+import TimelineFilters from "../components/TimelineFilters";
 ---
 
 <Layout>
@@ -10,4 +11,15 @@ import Timeline from "../components/Timeline.astro";
       <Timeline />
     </div>
   </div>
+  <TimelineFilters
+    client:load
+    onFilterChange={(types) => {
+      // Handle filter changes
+      console.log("Filtered types:", types);
+    }}
+    onAddClick={() => {
+      // Handle add click
+      console.log("Add clicked");
+    }}
+  />
 </Layout>
