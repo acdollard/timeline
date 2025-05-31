@@ -33,13 +33,13 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 p-4 border-t border-gray-700">
+    <div className="fixed bottom-0 left-0 right-0 bg-darkestGray p-4 border-t border-gray-700">
       <div className="max-w-screen-xl mx-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-white text-xl font-semibold">Filter Events</h2>
+          <h2 className="text-white text-xl font-semibold">Select A Category To Display</h2>
           <button
             onClick={onAddClick}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            className="bg-primary hover:bg-white text-white hover:text-primary px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
           >
             <svg
               className="w-5 h-5"
@@ -53,8 +53,8 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
           </button>
         </div>
         
-        <div className="grid grid-cols-5 gap-4">
-          {eventTypes.map(type => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {eventTypes.map(type => ( type !== 'birth' &&
             <button
               key={type}
               onClick={() => handleTypeToggle(type)}
