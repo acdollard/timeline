@@ -25,14 +25,19 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false }) => {
   });
 
   return (
-    <div className="pin relative">
+    <div 
+      className="pin relative"
+      onPointerEnter={() => setShowTooltip(true)}
+      onPointerLeave={() => setShowTooltip(false)}
+    >
       <div
         className={`event h-6 w-6 hover:scale-150 ${getPinColor(event.type)} rounded-full transition-all duration-200 absolute left-1/2 -translate-x-1/2 cursor-pointer`}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
       />
       {showTooltip && (
-        <div className="absolute md:-translate-x-1/2 md:-top-16 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap z-10 -rotate-90 md:rotate-0">
+        <div 
+          className="absolute md:-translate-x-1/2 md:-top-16 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap z-10 -rotate-90 md:rotate-0"
+          style={{ pointerEvents: 'none' }}
+        >
           <div className="font-semibold">{event.name}</div>
           <div className="text-gray-300">{formattedDate}</div>
         </div>

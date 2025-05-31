@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getPinColor } from '../utils/pinColors';
 import type { EventType } from '../utils/pinColors';
 
 interface TimelineFiltersProps {
@@ -21,7 +22,6 @@ const eventTypes: EventType[] = [
 
 const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) => {
   const [selectedTypes, setSelectedTypes] = useState<EventType[]>(eventTypes);
-  const [isOpen, setIsOpen] = useState(false);
 
   const handleTypeToggle = (type: EventType) => {
     const newSelectedTypes = selectedTypes.includes(type)
@@ -34,57 +34,41 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gray-900 p-4 border-t border-gray-700">
-      <div className="max-w-screen-xl mx-auto flex justify-between items-center">
-        <div className="relative">
+      <div className="max-w-screen-xl mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-white text-xl font-semibold">Filter Events</h2>
           <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center space-x-2 text-white hover:text-gray-300"
+            onClick={onAddClick}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
           >
-            <span>Filter Events</span>
             <svg
-              className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
+            <span>Add Event</span>
           </button>
-          
-          {isOpen && (
-            <div className="absolute bottom-full mb-2 bg-gray-800 rounded-lg shadow-lg p-4 min-w-[800px]">
-              <h1 className="text-white text-2xl font-bold mx-auto text-center mb-4">Select Category To Display</h1>
-              <div className="grid grid-cols-5 gap-2">
-                {eventTypes.map(type => (
-                  <label key={type} className="flex items-center space-x-2 text-white">
-                    <input
-                      type="checkbox"
-                      checked={selectedTypes.includes(type)}
-                      onChange={() => handleTypeToggle(type)}
-                      className="rounded text-blue-500 focus:ring-blue-500"
-                    />
-                    <span className="capitalize">{type.replace('-', ' ')}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
-
-        <button
-          onClick={onAddClick}
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Add Event</span>
-        </button>
+        
+        <div className="grid grid-cols-5 gap-4">
+          {eventTypes.map(type => (
+            <button
+              key={type}
+              onClick={() => handleTypeToggle(type)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                selectedTypes.includes(type)
+                  ? 'bg-gray-700 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              <div className={`w-4 h-4 rounded-full ${getPinColor(type)}`} />
+              <span className="capitalize">{type.replace('-', ' ')}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

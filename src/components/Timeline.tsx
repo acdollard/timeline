@@ -45,14 +45,14 @@ const Timeline = ({ events = [] }: TimelineProps) => {
               <div
                 className="w-1 h-4 bg-white absolute"
                 style={{ left: `${((index + 1) / totalYears) * 100}%` }}
-              />
+                />
               {index % 5 === 0 && (
                 <div 
-                  className="absolute top-6 text-white text-xs"
-                  style={{ 
-                    left: `${((index + 1) / totalYears) * 100}%`,
-                    transform: 'translateX(-50%)'
-                  }}
+                className="absolute top-6 text-white text-xs bg-gray-900 z-10"
+                style={{ 
+                  left: `${((index + 1) / totalYears) * 100}%`,
+                  transform: 'translateX(-50%)'
+                }}
                 >
                   {year}
                 </div>
@@ -66,11 +66,9 @@ const Timeline = ({ events = [] }: TimelineProps) => {
             className={`flex flex-col h-auto absolute ${
               item.type === "birth"
                 ? "-translate-y-2.5"
-                : index % 2 === 0
-                  ? "-translate-y-full"
-                  : "rotate-180"
+                : ""
             }`}
-            style={{ left: `${item.position}%`, transform: 'translateX(-50%)' }}
+            style={{ left: `${item.position}%`}}
           >
             <Pin event={item} isBirth={item.type === "birth"} />
           </div>
