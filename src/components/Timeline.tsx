@@ -38,6 +38,19 @@ const Timeline = ({ events = [] }: TimelineProps) => {
   return (
     <div className="timeline-container flex flex-col h-auto">
       <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
+      {eventsWithPosition.map((item, index) => (
+          <div 
+            key={item.id}
+            className={`flex flex-col h-auto absolute z-5 ${
+              item.type === "birth"
+                ? "-translate-y-2.5"
+                : "-translate-y-full"
+            }`}
+            style={{ left: `${item.position}%`}}
+          >
+            <Pin event={item} isBirth={item.type === "birth"} />
+          </div>
+        ))}
         {Array.from({ length: totalYears }).map((_, index) => {
           const year = birthDate.getFullYear() + index + 1;
           return (
@@ -60,19 +73,7 @@ const Timeline = ({ events = [] }: TimelineProps) => {
             </React.Fragment>
           );
         })}
-        {eventsWithPosition.map((item, index) => (
-          <div 
-            key={item.id}
-            className={`flex flex-col h-auto absolute ${
-              item.type === "birth"
-                ? "-translate-y-2.5"
-                : ""
-            }`}
-            style={{ left: `${item.position}%`}}
-          >
-            <Pin event={item} isBirth={item.type === "birth"} />
-          </div>
-        ))}
+
       </div>
     </div>
   );
