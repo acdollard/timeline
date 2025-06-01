@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Pin from './Pin';
 import type { EventType } from '../utils/pinColors';
+import EventModal from './EventModal';
 
 interface TimelineEvent {
   id: number;
@@ -16,6 +17,9 @@ interface TimelineProps {
 }
 
 const Timeline = ({ events = [] }: TimelineProps) => {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+
   // Find the birth date and calculate the total timeline span
   const birthEvent = events.find(item => item.type === "birth");
   if (!birthEvent) {
@@ -35,20 +39,26 @@ const Timeline = ({ events = [] }: TimelineProps) => {
     return { ...item, position };
   });
 
+  const handlePinClick = (event: TimelineEvent) => {
+    setSelectedEvent(event);
+    setShowModal(true);
+  };
+
   return (
+    <>
     <div className="timeline-container flex flex-col h-auto">
       <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
-      {eventsWithPosition.map((item, index) => (
+        {eventsWithPosition.map((item, index) => (
           <div 
             key={item.id}
-            className={`flex flex-col h-auto absolute z-5 ${
+            className={`flex flex-col h-auto absolute ${
               item.type === "birth"
                 ? "-translate-y-2.5"
                 : "-translate-y-full"
             }`}
             style={{ left: `${item.position}%`}}
           >
-            <Pin event={item} isBirth={item.type === "birth"} />
+            <Pin event={item} isBirth={item.type === "birth"} handleClick={handlePinClick}/>
           </div>
         ))}
         {Array.from({ length: totalYears }).map((_, index) => {
@@ -58,14 +68,14 @@ const Timeline = ({ events = [] }: TimelineProps) => {
               <div
                 className="w-1 h-4 bg-white absolute"
                 style={{ left: `${((index + 1) / totalYears) * 100}%` }}
-                />
+              />
               {index % 5 === 0 && (
                 <div 
-                className="absolute top-6 text-white text-xs bg-gray-900 z-10"
-                style={{ 
-                  left: `${((index + 1) / totalYears) * 100}%`,
-                  transform: 'translateX(-50%)'
-                }}
+                  className="absolute top-6 text-white text-xs bg-gray-900"
+                  style={{ 
+                    left: `${((index + 1) / totalYears) * 100}%`,
+                    transform: 'translateX(-50%)'
+                  }}
                 >
                   {year}
                 </div>
@@ -73,9 +83,17 @@ const Timeline = ({ events = [] }: TimelineProps) => {
             </React.Fragment>
           );
         })}
-
       </div>
     </div>
+    <EventModal
+        event={selectedEvent}
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setSelectedEvent(null);
+        }}
+      />
+    </>
   );
 };
 
