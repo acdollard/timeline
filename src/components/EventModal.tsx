@@ -26,8 +26,8 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 w-full h-full">   
-      <div className="bg-gray-900 rounded-lg p-8 w-[90%] mx-4 absolute md:w-[900px]">
+    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 w-full h-full animate-fadeIn" onClick={onClose}>   
+      <div className="bg-gray-900 rounded-lg p-8 w-[90%] mx-4 absolute md:w-[600px]" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -47,7 +47,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
           </svg>
         </button>
         
-        <div className="space-y-6">
+        <div className="space-y-6  animate-slideIn">
           <h2 className="text-3xl font-bold text-white">{event?.name}</h2>
           <div className="text-gray-300 text-lg">{formattedDate}</div>
           <div className="text-gray-400 text-lg leading-relaxed">{event?.description}</div>
@@ -57,7 +57,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose }) => {
           </div>
         </div>
       </div>
-      </div>
+    </div>
   );
 };
 

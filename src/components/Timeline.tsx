@@ -46,46 +46,46 @@ const Timeline = ({ events = [] }: TimelineProps) => {
 
   return (
     <>
-    <div className="timeline-container flex flex-col h-auto">
-      <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
-        {eventsWithPosition.map((item, index) => (
-          <div 
-            key={item.id}
-            className={`flex flex-col h-auto absolute ${
-              item.type === "birth"
-                ? "-translate-y-2.5"
-                : "-translate-y-full"
-            }`}
-            style={{ left: `${item.position}%`}}
-          >
-            <Pin event={item} isBirth={item.type === "birth"} handleClick={handlePinClick}/>
-          </div>
-        ))}
-        {Array.from({ length: totalYears }).map((_, index) => {
-          const year = birthDate.getFullYear() + index + 1;
-          return (
-            <React.Fragment key={year}>
-              <div
-                className="w-1 h-4 bg-white absolute"
-                style={{ left: `${((index + 1) / totalYears) * 100}%` }}
-              />
-              {index % 5 === 0 && (
-                <div 
-                  className="absolute top-6 text-white text-xs bg-gray-900"
-                  style={{ 
-                    left: `${((index + 1) / totalYears) * 100}%`,
-                    transform: 'translateX(-50%)'
-                  }}
-                >
-                  {year}
-                </div>
-              )}
-            </React.Fragment>
-          );
-        })}
+      <div className="timeline-container flex flex-col h-auto">
+        <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
+          {eventsWithPosition.map((item, index) => (
+            <div 
+              key={item.id}
+              className={`flex flex-col h-auto absolute ${
+                item.type === "birth"
+                  ? "-translate-y-2.5"
+                  : "-translate-y-full"
+              }`}
+              style={{ left: `${item.position}%`}}
+            >
+              <Pin event={item} isBirth={item.type === "birth"} handleClick={handlePinClick}/>
+            </div>
+          ))}
+          {Array.from({ length: totalYears }).map((_, index) => {
+            const year = birthDate.getFullYear() + index + 1;
+            return (
+              <React.Fragment key={year}>
+                <div
+                  className="w-1 h-4 bg-white absolute"
+                  style={{ left: `${((index + 1) / totalYears) * 100}%` }}
+                />
+                {index % 5 === 0 && (
+                  <div 
+                    className="absolute top-6 text-white text-xs bg-gray-900"
+                    style={{ 
+                      left: `${((index + 1) / totalYears) * 100}%`,
+                      transform: 'translateX(-50%)'
+                    }}
+                  >
+                    {year}
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
       </div>
-    </div>
-    <EventModal
+      <EventModal
         event={selectedEvent}
         isOpen={showModal}
         onClose={() => {
