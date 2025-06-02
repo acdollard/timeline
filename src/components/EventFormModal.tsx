@@ -120,7 +120,6 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary min-h-[100px]"
-              required
             />
           </div>
 
