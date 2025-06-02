@@ -22,7 +22,6 @@ const eventTypes: EventType[] = [
 
 const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) => {
   const [selectedTypes, setSelectedTypes] = useState<EventType[]>(eventTypes);
-
   const handleTypeToggle = (type: EventType) => {
     const newSelectedTypes = selectedTypes.includes(type)
       ? selectedTypes.filter(t => t !== type)
@@ -36,7 +35,7 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
     <div className="fixed bottom-0 left-0 right-0 bg-darkestGray p-4 border-t md:mb-6 border-gray-700">
       <div className="max-w-screen-xl mx-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-white text-xl font-semibold">Select A Category To Display</h2>
+          <h2 className="text-white text-xl font-semibold">Select Categories To Display</h2>
           <button
             onClick={onAddClick}
             className="bg-primary hover:bg-white text-white hover:text-primary px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"

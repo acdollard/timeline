@@ -3,7 +3,7 @@ export type EventType = 'birth' | 'school' | 'travel' | 'relationships' | 'move'
 export const getPinColor = (type: EventType): string => {
   switch (type) {
     case 'birth':
-      return 'bg-white';
+      return ' bg-gradient-to-r from-white to-gray-300';
     case 'school':
       return 'bg-gradient-to-r from-blue-500 to-blue-700 ';
     case 'travel':

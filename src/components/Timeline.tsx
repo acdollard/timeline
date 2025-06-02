@@ -1,29 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Pin from './Pin';
 import type { EventType } from '../utils/pinColors';
 import EventModal from './EventModal';
-
-interface TimelineEvent {
-  id: number;
-  name: string;
-  description: string;
-  date: string;
-  type: EventType;
-  position?: number;
-}
+import EventFormModal from './EventFormModal';
+import { eventApi } from '../api/events';
+import type { TimelineEvent } from '../types/events';
 
 interface TimelineProps {
-  events?: TimelineEvent[];
+  initialEvents?: TimelineEvent[];
 }
 
-const Timeline = ({ events = [] }: TimelineProps) => {
+const Timeline = ({ initialEvents = [] }: TimelineProps) => {
+  const [events, setEvents] = useState<TimelineEvent[]>(initialEvents);
   const [showModal, setShowModal] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      const response = await eventApi.getAll();
+      if (response.data) {
+        setEvents(response.data);
+      }
+    };
+    loadEvents();
+  }, []);
 
   // Find the birth date and calculate the total timeline span
   const birthEvent = events.find(item => item.type === "birth");
   if (!birthEvent) {
-    return <div>No birth event found</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="text-gray-400 mb-4">No birth event found</p>
+        <button
+          onClick={() => setShowFormModal(true)}
+          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+        >
+          + Add Birth Event
+        </button>
+        <EventFormModal
+          isOpen={showFormModal}
+          onClose={() => setShowFormModal(false)}
+          onSubmit={async (event) => {
+            const response = await eventApi.create(event);
+            if (response.data) {
+              setEvents([...events, response.data]);
+            }
+          }}
+        />
+      </div>
+    );
   }
 
   const birthDate = new Date(birthEvent.date);
@@ -47,8 +73,16 @@ const Timeline = ({ events = [] }: TimelineProps) => {
   return (
     <>
       <div className="timeline-container flex flex-col h-auto">
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setShowFormModal(true)}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+          >
+            + Add Event
+          </button>
+        </div>
         <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
-          {eventsWithPosition.map((item, index) => (
+          {eventsWithPosition.map((item) => (
             <div 
               key={item.id}
               className={`flex flex-col h-auto absolute ${
@@ -91,6 +125,16 @@ const Timeline = ({ events = [] }: TimelineProps) => {
         onClose={() => {
           setShowModal(false);
           setSelectedEvent(null);
+        }}
+      />
+      <EventFormModal
+        isOpen={showFormModal}
+        onClose={() => setShowFormModal(false)}
+        onSubmit={async (event) => {
+          const response = await eventApi.create(event);
+          if (response.data) {
+            setEvents([...events, response.data]);
+          }
         }}
       />
     </>
