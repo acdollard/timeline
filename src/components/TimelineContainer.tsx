@@ -2,20 +2,13 @@ import React, { useState } from 'react';
 import Timeline from './Timeline';
 import TimelineFilters from './TimelineFilters';
 import type { EventType } from '../utils/pinColors';
-
-interface TimelineEvent {
-  id: number;
-  name: string;
-  description: string;
-  date: string;
-  type: EventType;
-}
+import type { TimelineEvent } from '../types/events';
 
 interface TimelineContainerProps {
   events: TimelineEvent[];
 }
 
-const TimelineContainer = ({ events }: TimelineContainerProps) => {
+const TimelineContainer: React.FC<TimelineContainerProps> = ({ events }) => {
   const [selectedTypes, setSelectedTypes] = useState<EventType[]>(() => [
     'birth',
     'school',
@@ -34,7 +27,7 @@ const TimelineContainer = ({ events }: TimelineContainerProps) => {
     <>
       <div className="w-full h-[80vh] flex flex-col justify-center">
         <div className="my-auto">
-          <Timeline events={filteredEvents} />
+          <Timeline initialEvents={filteredEvents} />
         </div>
       </div>
       <TimelineFilters

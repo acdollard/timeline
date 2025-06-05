@@ -3,7 +3,7 @@ import Pin from './Pin';
 import type { EventType } from '../utils/pinColors';
 import EventModal from './EventModal';
 import EventFormModal from './EventFormModal';
-import { eventApi } from '../api/events';
+import { eventService } from '../services/eventService';
 import type { TimelineEvent } from '../types/events';
 
 interface TimelineProps {
@@ -15,22 +15,52 @@ const Timeline = ({ initialEvents = [] }: TimelineProps) => {
   const [showModal, setShowModal] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadEvents = async () => {
-      const response = await eventApi.getAll();
-      if (response.data) {
-        setEvents(response.data);
+      try {
+        setIsLoading(true);
+        const data = await eventService.getAll();
+        setEvents(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to load events:', err);
+        setError(err instanceof Error ? err.message : 'Failed to connect to database');
+        // Fallback to initial events if available
+        if (initialEvents.length > 0) {
+          setEvents(initialEvents);
+        }
+      } finally {
+        setIsLoading(false);
       }
     };
     loadEvents();
-  }, []);
+  }, [initialEvents]);
+
+  const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>) => {
+    try {
+      const newEvent = await eventService.create(event);
+      setEvents(prev => [...prev, newEvent]);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to create event:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create event');
+      throw err; // Re-throw to let the form handle the error
+    }
+  };
 
   // Find the birth date and calculate the total timeline span
   const birthEvent = events.find(item => item.type === "birth");
   if (!birthEvent) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
+        {error && (
+          <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-md text-red-200">
+            {error}
+          </div>
+        )}
         <p className="text-gray-400 mb-4">No birth event found</p>
         <button
           onClick={() => setShowFormModal(true)}
@@ -41,12 +71,7 @@ const Timeline = ({ initialEvents = [] }: TimelineProps) => {
         <EventFormModal
           isOpen={showFormModal}
           onClose={() => setShowFormModal(false)}
-          onSubmit={async (event) => {
-            const response = await eventApi.create(event);
-            if (response.data) {
-              setEvents([...events, response.data]);
-            }
-          }}
+          onSubmit={handleCreateEvent}
         />
       </div>
     );
@@ -70,8 +95,21 @@ const Timeline = ({ initialEvents = [] }: TimelineProps) => {
     setShowModal(true);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <>
+      {error && (
+        <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-md text-red-200">
+          {error}
+        </div>
+      )}
       <div className="timeline-container flex flex-col h-auto">
         <div className="flex justify-end mb-4">
           <button
@@ -130,12 +168,7 @@ const Timeline = ({ initialEvents = [] }: TimelineProps) => {
       <EventFormModal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
-        onSubmit={async (event) => {
-          const response = await eventApi.create(event);
-          if (response.data) {
-            setEvents([...events, response.data]);
-          }
-        }}
+        onSubmit={handleCreateEvent}
       />
     </>
   );
