@@ -60,7 +60,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg">
+        <div
+          className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          role="listbox"
+        >
           {options.map((option) => (
             <button
               key={option}
@@ -69,7 +72,11 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
                 onChange(option);
                 setIsOpen(false);
               }}
-              className="w-full px-3 py-2 text-left text-white hover:bg-gray-700 flex items-center space-x-2"
+              className={`w-full px-3 py-2 text-left text-white hover:bg-gray-700 flex items-center space-x-2 ${
+                value === option ? 'bg-gray-700' : ''
+              }`}
+              role="option"
+              aria-selected={value === option}
             >
               <div className={`w-3 h-3 rounded-full ${getPinColor(option)}`} />
               <span>{formatOption(option)}</span>
