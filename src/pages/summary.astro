@@ -1,24 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import TimelineContainer from "../components/TimelineContainer";
-import data from "../data.json";
-import type { EventType } from "../utils/pinColors";
-
-// Initialize with all event types selected
-const initialEventTypes: EventType[] = [
-  "birth",
-  "school",
-  "travel",
-  "relationships",
-  "move",
-  "career",
-  "pets",
-  "bucket-list",
-  "hobbies",
-];
 ---
 
-<Layout>
-  <h1 class="text-white text-2xl font-bold text-center">Summary</h1>
-  <TimelineContainer client:load events={data} />
+<Layout title="Timeline">
+  <div class="w-full h-screen bg-darkestGray">
+    <TimelineContainer client:load />
+  </div>
 </Layout>

@@ -3,53 +3,24 @@ import Pin from './Pin';
 import type { EventType } from '../utils/pinColors';
 import EventModal from './EventModal';
 import EventFormModal from './EventFormModal';
-import { eventService } from '../services/eventService';
+
 import type { TimelineEvent } from '../types/events';
 
 interface TimelineProps {
-  initialEvents?: TimelineEvent[];
+  events?: TimelineEvent[];
+  setShowFormModal: (show: boolean) => void;
+  showFormModal: boolean;
+  handleCreateEvent: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
+  error: string | null;
+  isLoading: boolean;
 }
 
-const Timeline = ({ initialEvents = [] }: TimelineProps) => {
-  const [events, setEvents] = useState<TimelineEvent[]>(initialEvents);
+const Timeline = ({     events = [], setShowFormModal, showFormModal, handleCreateEvent, error , isLoading }: TimelineProps) => {
+
   const [showModal, setShowModal] = useState(false);
-  const [showFormModal, setShowFormModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        setIsLoading(true);
-        const data = await eventService.getAll();
-        setEvents(data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to load events:', err);
-        setError(err instanceof Error ? err.message : 'Failed to connect to database');
-        // Fallback to initial events if available
-        if (initialEvents.length > 0) {
-          setEvents(initialEvents);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadEvents();
-  }, [initialEvents]);
 
-  const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>) => {
-    try {
-      const newEvent = await eventService.create(event);
-      setEvents(prev => [...prev, newEvent]);
-      setError(null);
-    } catch (err) {
-      console.error('Failed to create event:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create event');
-      throw err; // Re-throw to let the form handle the error
-    }
-  };
 
   // Find the birth date and calculate the total timeline span
   const birthEvent = events.find(item => item.type === "birth");
@@ -165,11 +136,7 @@ const Timeline = ({ initialEvents = [] }: TimelineProps) => {
           setSelectedEvent(null);
         }}
       />
-      <EventFormModal
-        isOpen={showFormModal}
-        onClose={() => setShowFormModal(false)}
-        onSubmit={handleCreateEvent}
-      />
+
     </>
   );
 };
