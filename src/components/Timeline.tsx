@@ -106,14 +106,6 @@ const Timeline = ({
         </div>
       )}
       <div className="timeline-container flex flex-col h-auto">
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => setShowFormModal(true)}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-          >
-            + Add Event
-          </button>
-        </div>
         <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
           {eventsWithPosition.map((item) => (
             <div 
