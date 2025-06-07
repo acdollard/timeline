@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Pin from './Pin';
 import type { EventType } from '../utils/pinColors';
 import EventModal from './EventModal';
 import EventFormModal from './EventFormModal';
-
 import type { TimelineEvent } from '../types/events';
 
 interface TimelineProps {
@@ -11,16 +10,25 @@ interface TimelineProps {
   setShowFormModal: (show: boolean) => void;
   showFormModal: boolean;
   handleCreateEvent: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
+  handleUpdateEvent: (id: string, event: Omit<TimelineEvent, 'id'>) => Promise<void>;
+  handleDeleteEvent: (id: string) => Promise<void>;
   error: string | null;
   isLoading: boolean;
 }
 
-const Timeline = ({     events = [], setShowFormModal, showFormModal, handleCreateEvent, error , isLoading }: TimelineProps) => {
-
+const Timeline = ({ 
+  events = [], 
+  setShowFormModal, 
+  showFormModal, 
+  handleCreateEvent,
+  handleUpdateEvent,
+  handleDeleteEvent,
+  error, 
+  isLoading 
+}: TimelineProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
-
-
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
 
   // Find the birth date and calculate the total timeline span
   const birthEvent = events.find(item => item.type === "birth");
@@ -64,6 +72,22 @@ const Timeline = ({     events = [], setShowFormModal, showFormModal, handleCrea
   const handlePinClick = (event: TimelineEvent) => {
     setSelectedEvent(event);
     setShowModal(true);
+  };
+
+  const handleUpdate = async (event: Omit<TimelineEvent, 'id'>) => {
+    if (selectedEvent) {
+      await handleUpdateEvent(selectedEvent.id, event);
+      setShowUpdateForm(false);
+      setShowModal(false);
+      setSelectedEvent(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    await handleDeleteEvent(id);
+    setShowUpdateForm(false);
+    setShowModal(false);
+    setSelectedEvent(null);
   };
 
   if (isLoading) {
@@ -135,8 +159,19 @@ const Timeline = ({     events = [], setShowFormModal, showFormModal, handleCrea
           setShowModal(false);
           setSelectedEvent(null);
         }}
+        onUpdate={() => setShowUpdateForm(true)}
       />
-
+      <EventFormModal
+        isOpen={showFormModal || showUpdateForm}
+        onClose={() => {
+          setShowFormModal(false);
+          setShowUpdateForm(false);
+          setSelectedEvent(null);
+        }}
+        onSubmit={showUpdateForm ? handleUpdate : handleCreateEvent}
+        onDelete={handleDelete}
+        initialEvent={selectedEvent || undefined}
+      />
     </>
   );
 };

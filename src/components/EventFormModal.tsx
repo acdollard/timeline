@@ -1,141 +1,132 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { TimelineEvent } from '../types/events';
 import type { EventType } from '../utils/pinColors';
-import { getPinColor } from '../utils/pinColors';
+import { EVENT_TYPES } from '../utils/pinColors';
 import CustomSelect from './CustomSelect';
 
 interface EventFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
   initialEvent?: TimelineEvent;
 }
 
-const EVENT_TYPES: EventType[] = [
-  'birth',
-  'school',
-  'travel',
-  'relationships',
-  'move',
-  'career',
-  'pets',
-  'bucket-list',
-  'hobbies'
-];
-
-const EventFormModal: React.FC<EventFormModalProps> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  initialEvent
-}) => {
+const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: EventFormModalProps) => {
   const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>({
-    name: initialEvent?.name || '',
-    description: initialEvent?.description || '',
-    date: initialEvent?.date || new Date().toISOString().split('T')[0],
-    type: initialEvent?.type || 'birth'
+    name: '',
+    date: '',
+    type: 'birth',
+    description: ''
   });
+
+  useEffect(() => {
+    if (initialEvent) {
+      setFormData({
+        name: initialEvent.name,
+        date: initialEvent.date,
+        type: initialEvent.type,
+        description: initialEvent.description
+      });
+    }
+  }, [initialEvent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
-    onClose();
+    try {
+      await onSubmit(formData);
+      onClose();
+    } catch (error) {
+      // Error is handled by the parent component
+    }
+  };
+
+  const handleDelete = async () => {
+    if (initialEvent && onDelete) {
+      try {
+        await onDelete(initialEvent.id);
+        onClose();
+      } catch (error) {
+        // Error is handled by the parent component
+      }
+    }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 animate-fadeIn">
-      <div className="bg-gray-900 rounded-lg p-8 w-[90%] mx-4 md:w-[600px]">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">
-            {initialEvent ? 'Edit Event' : 'Add New Event'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md">
+        <h2 className="text-white text-xl font-semibold mb-4">
+          {initialEvent ? 'Update Event' : 'Create New Event'}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
-              Title
-            </label>
+            <label className="block text-white mb-1">Name</label>
             <input
               type="text"
-              id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full bg-gray-700 text-white rounded px-3 py-2"
               required
             />
           </div>
-
           <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-300 mb-1">
-              Date
-            </label>
+            <label className="block text-white mb-1">Date</label>
             <input
               type="date"
-              id="date"
-              value={formData.date}
+              value={formData.date.split('T')[0]}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full bg-gray-700 text-white rounded px-3 py-2"
               required
             />
           </div>
-
           <div>
-            <label htmlFor="type" className="block text-sm font-medium text-gray-300 mb-1">
-              Category
-            </label>
-            <CustomSelect
+            <label className="block text-white mb-1">Type</label>
+            <select
               value={formData.type}
-              onChange={(type) => setFormData({ ...formData, type })}
-              options={EVENT_TYPES}
-            />
+              onChange={(e) => setFormData({ ...formData, type: e.target.value as EventType })}
+              className="w-full bg-gray-700 text-white rounded px-3 py-2"
+              required
+            >
+              {EVENT_TYPES.map((type: EventType) => (
+                <option key={type} value={type}>
+                  {type.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                </option>
+              ))}
+            </select>
           </div>
-
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-1">
-              Details
-            </label>
+            <label className="block text-white mb-1">Description</label>
             <textarea
-              id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary min-h-[100px]"
+              className="w-full bg-gray-700 text-white rounded px-3 py-2"
+              rows={3}
             />
           </div>
-
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-between">
+            <button
+              type="submit"
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
+            >
+              {initialEvent ? 'Update Event' : 'Create Event'}
+            </button>
+            {initialEvent && onDelete && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                Delete Event
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-300 hover:text-white"
+              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-            >
-              {initialEvent ? 'Save Changes' : 'Add Event'}
             </button>
           </div>
         </form>

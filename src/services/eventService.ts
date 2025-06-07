@@ -9,7 +9,7 @@ export const eventService = {
     return response.json();
   },
 
-  async getOne(id: number): Promise<TimelineEvent> {
+  async getOne(id: string): Promise<TimelineEvent> {
     const response = await fetch(`/api/events/${id}`);
     if (!response.ok) {
       throw new Error('Failed to fetch event');
@@ -31,7 +31,7 @@ export const eventService = {
     return response.json();
   },
 
-  async update(id: number, event: Partial<TimelineEvent>): Promise<TimelineEvent> {
+  async update(id: string, event: Partial<TimelineEvent>): Promise<TimelineEvent> {
     const response = await fetch(`/api/events/${id}`, {
       method: 'PUT',
       headers: {
@@ -45,7 +45,7 @@ export const eventService = {
     return response.json();
   },
 
-  async delete(id: number): Promise<void> {
+  async delete(id: string): Promise<void> {
     const response = await fetch(`/api/events/${id}`, {
       method: 'DELETE',
     });

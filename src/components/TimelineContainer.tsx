@@ -57,10 +57,38 @@ const TimelineContainer: React.FC = () => {
     try {
       setIsLoading(true);
       await eventService.create(event);
-      await fetchEvents(); // Fetch fresh data after creating
+      await fetchEvents();
     } catch (err) {
       console.error('Failed to create event:', err);
       setError(err instanceof Error ? err.message : 'Failed to create event');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateEvent = async (id: string, event: Omit<TimelineEvent, 'id'>) => {
+    try {
+      setIsLoading(true);
+      await eventService.update(id, event);
+      await fetchEvents();
+    } catch (err) {
+      console.error('Failed to update event:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update event');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    try {
+      setIsLoading(true);
+      await eventService.delete(id);
+      await fetchEvents();
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete event');
       throw err;
     } finally {
       setIsLoading(false);
@@ -72,10 +100,12 @@ const TimelineContainer: React.FC = () => {
       <div className="w-full h-[80vh] flex flex-col justify-center">
         <div className="my-auto">
           <Timeline 
-            events={filteredEvents}
+            events={filteredEvents} 
             setShowFormModal={setShowFormModal} 
             showFormModal={showFormModal} 
-            handleCreateEvent={handleCreateEvent} 
+            handleCreateEvent={handleCreateEvent}
+            handleUpdateEvent={handleUpdateEvent}
+            handleDeleteEvent={handleDeleteEvent}
             error={error}
             isLoading={isLoading}
           />

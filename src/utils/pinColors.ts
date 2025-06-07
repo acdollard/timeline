@@ -1,5 +1,17 @@
 export type EventType = 'birth' | 'school' | 'travel' | 'relationships' | 'move' | 'career' | 'pets' | 'bucket-list' | 'hobbies' | string;
 
+export const EVENT_TYPES: EventType[] = [
+  'birth',
+  'school',
+  'travel',
+  'relationships',
+  'move',
+  'career',
+  'pets',
+  'bucket-list',
+  'hobbies'
+];
+
 export const getPinColor = (type: EventType): string => {
   switch (type) {
     case 'birth':

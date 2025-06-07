@@ -1,7 +1,7 @@
 import type { EventType } from '../utils/pinColors';
 
 export interface TimelineEvent {
-  id: number;
+  id: string;
   name: string;
   description: string;
   date: string;

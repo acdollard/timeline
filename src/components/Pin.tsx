@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import { getPinColor } from '../utils/pinColors';
 import type { EventType } from '../utils/pinColors';
-
-interface TimelineEvent {
-  id: number;
-  name: string;
-  description: string;
-  date: string;
-  type: EventType;
-  position?: number;
-}
+import type { TimelineEvent } from '../types/events';
 
 interface PinProps {
   event: TimelineEvent;
