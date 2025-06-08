@@ -24,7 +24,6 @@ const Timeline = ({
   handleUpdateEvent,
   handleDeleteEvent,
   error, 
-  isLoading 
 }: TimelineProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
@@ -32,31 +31,8 @@ const Timeline = ({
 
   // Find the birth date and calculate the total timeline span
   const birthEvent = events.find(item => item.type === "birth");
-  if (!birthEvent) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full">
-        {error && (
-          <div className="mb-4 p-4 bg-red-900/50 border border-red-700 rounded-md text-red-200">
-            {error}
-          </div>
-        )}
-        <p className="text-gray-400 mb-4">No birth event found</p>
-        <button
-          onClick={() => setShowFormModal(true)}
-          className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
-        >
-          + Add Birth Event
-        </button>
-        <EventFormModal
-          isOpen={showFormModal}
-          onClose={() => setShowFormModal(false)}
-          onSubmit={handleCreateEvent}
-        />
-      </div>
-    );
-  }
 
-  const birthDate = new Date(birthEvent.date);
+  const birthDate = new Date(birthEvent?.date || '');
   const today = new Date();
   const totalDays = Math.ceil((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
   const totalYears = Math.ceil(totalDays / 365);
@@ -90,13 +66,7 @@ const Timeline = ({
     setSelectedEvent(null);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
+
 
   return (
     <>

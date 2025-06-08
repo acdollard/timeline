@@ -1,10 +1,37 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { supabase } from "../lib/supabase";
 import TimelineContainer from "../components/TimelineContainer";
+
+// Get the session on the server side
+const {
+  data: { session },
+} = await supabase.auth.getSession();
+
+// If no session, redirect to login
+if (!session) {
+  return Astro.redirect("/login");
+}
+
+// Get initial events for the user
+const { data: events } = await supabase
+  .from("events")
+  .select("*")
+  .eq("user_id", session.user.id)
+  .order("date", { ascending: true });
 ---
 
-<Layout title="Timeline">
-  <div class="w-full h-screen bg-darkestGray">
-    <TimelineContainer client:load />
+<Layout>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-white mb-8">My Timeline</h1>
+    <div
+      class="w-full h-[60vh] bg-gray-800 rounded-lg p-4 flex flex-col justify-center items-center"
+    >
+      <TimelineContainer
+        client:load
+        events={events || []}
+        initialSession={session}
+      />
+    </div>
   </div>
 </Layout>

@@ -1,13 +1,63 @@
+import { supabase } from '../lib/supabase';
 import type { TimelineEvent } from '../types/events';
 
-export const eventService = {
+class EventService {
+  async create(event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No authenticated user');
+
+    const { data, error } = await supabase
+      .from('events')
+      .insert([{ ...event, user_id: session.user.id }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async update(id: string, event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No authenticated user');
+
+    const { data, error } = await supabase
+      .from('events')
+      .update(event)
+      .eq('id', id)
+      .eq('user_id', session.user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async delete(id: string): Promise<void> {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No authenticated user');
+
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', session.user.id);
+
+    if (error) throw error;
+  }
+
   async getAll(): Promise<TimelineEvent[]> {
-    const response = await fetch('/api/events');
-    if (!response.ok) {
-      throw new Error('Failed to fetch events');
-    }
-    return response.json();
-  },
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('No authenticated user');
+
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .order('date', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  }
 
   async getOne(id: string): Promise<TimelineEvent> {
     const response = await fetch(`/api/events/${id}`);
@@ -15,42 +65,7 @@ export const eventService = {
       throw new Error('Failed to fetch event');
     }
     return response.json();
-  },
-
-  async create(event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent> {
-    const response = await fetch('/api/events', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(event),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to create event');
-    }
-    return response.json();
-  },
-
-  async update(id: string, event: Partial<TimelineEvent>): Promise<TimelineEvent> {
-    const response = await fetch(`/api/events/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(event),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to update event');
-    }
-    return response.json();
-  },
-
-  async delete(id: string): Promise<void> {
-    const response = await fetch(`/api/events/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to delete event');
-    }
   }
-}; 
+}
+
+export const eventService = new EventService(); 

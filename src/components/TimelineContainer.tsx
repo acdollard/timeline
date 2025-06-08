@@ -6,8 +6,15 @@ import type { TimelineEvent } from '../types/events';
 import { eventService } from '../services/eventService';
 import EventFormModal from './EventFormModal';
 import { supabase } from '../lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
-const TimelineContainer: React.FC = () => {
+interface TimelineContainerProps {
+  events: TimelineEvent[];
+  initialSession: Session | null;
+}
+
+const TimelineContainer = ({ events, initialSession }: TimelineContainerProps) => {
+  
   const [selectedTypes, setSelectedTypes] = useState<EventType[]>(() => [
     'birth',
     'school',
@@ -20,22 +27,43 @@ const TimelineContainer: React.FC = () => {
     'hobbies'
   ]);
 
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [userEvents, setUserEvents] = useState<TimelineEvent[]>(events);
   const [filteredEvents, setFilteredEvents] = useState<TimelineEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [session, setSession] = useState<Session | null>(initialSession);
+
+  // Set up auth state listener
+  useEffect(() => {
+    // Only set up the listener if we don't have an initial session
+    if (!initialSession) {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        console.log("Auth state changed:", _event, session?.user.id);
+        setSession(session);
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [initialSession]);
 
   const fetchEvents = async () => {
+    if (!session) return;
+    
     try {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("events")
         .select("*")
+        .eq("user_id", session.user.id)
         .order("date", { ascending: true });
 
       if (error) throw error;
-      setEvents(data || []);
+      setUserEvents(data || []);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch events:', err);
@@ -45,18 +73,29 @@ const TimelineContainer: React.FC = () => {
     }
   };
 
+  // Fetch events when session is available
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [session]);
 
+  // Update filtered events when userEvents or selectedTypes change
   useEffect(() => {
-    setFilteredEvents(events.filter(event => selectedTypes.includes(event.type)));
-  }, [selectedTypes, events]);
+    console.log("Updating filtered events");
+    setFilteredEvents(userEvents.filter(event => selectedTypes.includes(event.type)));
+  }, [selectedTypes, userEvents]);
 
   const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>) => {
     try {
       setIsLoading(true);
-      await eventService.create(event);
+      if (!session) throw new Error('No authenticated user');
+      
+      const { data, error } = await supabase
+        .from('events')
+        .insert([{ ...event, user_id: session.user.id }])
+        .select()
+        .single();
+
+      if (error) throw error;
       await fetchEvents();
     } catch (err) {
       console.error('Failed to create event:', err);
@@ -70,7 +109,17 @@ const TimelineContainer: React.FC = () => {
   const handleUpdateEvent = async (id: string, event: Omit<TimelineEvent, 'id'>) => {
     try {
       setIsLoading(true);
-      await eventService.update(id, event);
+      if (!session) throw new Error('No authenticated user');
+
+      const { data, error } = await supabase
+        .from('events')
+        .update(event)
+        .eq('id', id)
+        .eq('user_id', session.user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
       await fetchEvents();
     } catch (err) {
       console.error('Failed to update event:', err);
@@ -84,7 +133,15 @@ const TimelineContainer: React.FC = () => {
   const handleDeleteEvent = async (id: string) => {
     try {
       setIsLoading(true);
-      await eventService.delete(id);
+      if (!session) throw new Error('No authenticated user');
+
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', session.user.id);
+
+      if (error) throw error;
       await fetchEvents();
     } catch (err) {
       console.error('Failed to delete event:', err);
@@ -95,12 +152,50 @@ const TimelineContainer: React.FC = () => {
     }
   };
 
+  const hasBirthEvent = userEvents.some(event => event.type === 'birth');
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!hasBirthEvent) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full space-y-4">
+        <div className="text-white text-center">
+          <h2 className="text-xl font-semibold mb-2">No Birth Event Found</h2>
+          <p className="text-gray-400">Please add a birth event to start your timeline.</p>
+        </div>
+        <button
+          onClick={() => setShowFormModal(true)}
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90"
+        >
+          Add Birth Event
+        </button>
+        <EventFormModal
+          isOpen={showFormModal}
+          onClose={() => setShowFormModal(false)}
+          onSubmit={handleCreateEvent}
+          initialEvent={{
+            type: 'birth',
+            name: '',
+            date: '',
+            description: ''
+          } as TimelineEvent}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="w-full h-[80vh] flex flex-col justify-center">
+      <div className="w-full flex flex-col justify-center">
         <div className="my-auto">
           <Timeline 
-            events={filteredEvents} 
+            events={userEvents} 
             setShowFormModal={setShowFormModal} 
             showFormModal={showFormModal} 
             handleCreateEvent={handleCreateEvent}

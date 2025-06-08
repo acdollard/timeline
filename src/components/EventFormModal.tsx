@@ -55,7 +55,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
+    <div className="fixed inset-0 flex items-center justify-center z-50 animate-fadeIn">
       <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md">
         <h2 className="text-white text-xl font-semibold mb-4">
           {initialEvent ? 'Update Event' : 'Create New Event'}
@@ -75,7 +75,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
             <label className="block text-white mb-1">Date</label>
             <input
               type="date"
-              value={formData.date.split('T')[0]}
+              value={formData.date?.split('T')[0]}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               className="w-full bg-gray-700 text-white rounded px-3 py-2"
               required
