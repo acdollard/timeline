@@ -30,7 +30,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false , handleClick}) => {
         />
         {showTooltip && (
           <div 
-            className="absolute md:-translate-x-1/2 md:-top-16 bg-gray-800 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap -rotate-90 md:rotate-0"
+            className="absolute md:-translate-x-1/2 md:-top-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap -rotate-90 md:rotate-0"
             style={{ pointerEvents: 'none' }}
           >
             <div className="font-semibold">{event.name}</div>

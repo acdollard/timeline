@@ -175,7 +175,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
 
   return (
     <>
-      <div className="w-full flex flex-col justify-center">
+      <div className="w-full flex flex-col justify-end">
         <div className="my-auto">
           <Timeline 
             events={userEvents} 
@@ -189,6 +189,8 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
           />
         </div>
       </div>
+
+
       <TimelineFilters
         onFilterChange={setSelectedTypes}
         onAddClick={() => setShowFormModal(true)}
@@ -198,6 +200,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         onClose={() => setShowFormModal(false)}
         onSubmit={handleCreateEvent}
       />
+
     </>
   );
 };
