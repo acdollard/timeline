@@ -1,14 +1,19 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
-// const { cookies, redirect } = Astro;
+const { cookies, redirect, request } = Astro;
 
-// const accessToken = cookies.get("sb-access-token");
-// const refreshToken = cookies.get("sb-refresh-token");
+// Check if there's an error in the URL
+const url = new URL(request.url);
+const error = url.searchParams.get("error");
 
-// if (accessToken && refreshToken) {
-//   return redirect("/");
-// }
+// If user is already logged in, redirect to home
+const accessToken = cookies.get("sb-access-token");
+const refreshToken = cookies.get("sb-refresh-token");
+
+if (accessToken && refreshToken) {
+  return redirect("/");
+}
 ---
 
 <Layout title="Sign in">
@@ -23,35 +28,59 @@ import Layout from "../layouts/Layout.astro";
         Welcome back! Please enter your details.
       </p>
 
+      {
+        error && (
+          <div class="w-full p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+            <p class="text-sm text-red-400">
+              {error === "invalid_credentials"
+                ? "Invalid email or password. Please try again."
+                : "An error occurred. Please try again."}
+            </p>
+          </div>
+        )
+      }
+
       <form
         action="/api/auth/signin"
         method="post"
-        class="flex flex-col items-center justify-center gap-4"
+        class="flex flex-col items-center justify-center gap-4 w-full"
       >
-        <label for="email">Email</label>
-        <input
-          type="email"
-          name="email"
-          id="email"
-          class="bg-gray-700 rounded-md p-2 w-sm"
-        />
-        <label for="password">Password</label>
-        <input
-          type="password"
-          name="password"
-          id="password"
-          class="bg-gray-700 rounded-md p-2 w-sm"
-        />
+        <div class="w-full">
+          <label
+            for="email"
+            class="block text-sm font-medium text-gray-300 mb-1">Email</label
+          >
+          <input
+            type="email"
+            name="email"
+            id="email"
+            required
+            class="w-full bg-gray-700 rounded-md p-2 text-white focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+        <div class="w-full">
+          <label
+            for="password"
+            class="block text-sm font-medium text-gray-300 mb-1">Password</label
+          >
+          <input
+            type="password"
+            name="password"
+            id="password"
+            required
+            class="w-full bg-gray-700 rounded-md p-2 text-white focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
         <button
           type="submit"
-          class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90"
+          class="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
         >
-          Login
+          Sign in
         </button>
       </form>
-      <p>
+      <p class="text-sm text-gray-400">
         New here?
-        <a href="/register" class="underline hover:text-primary"
+        <a href="/register" class="text-primary hover:text-primary/90 ml-1"
           >Create an account</a
         >
       </p>
