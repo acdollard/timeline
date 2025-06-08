@@ -38,9 +38,13 @@ const email = session.data.user?.email;
 ---
 
 <Layout title="dashboard">
-  <h1>Welcome {email}</h1>
-  <p>We are happy to see you here</p>
-  <form action="/api/auth/signout">
-    <button type="submit">Sign out</button>
-  </form>
+  <div
+    class="flex flex-col items-center justify-center max-w-7xl mx-auto text-white"
+  >
+    <h1 class="text-2xl font-bold">Welcome {email}</h1>
+    <p class="text-sm text-gray-400">We are happy to see you here</p>
+    <form action="/api/auth/signout">
+      <button type="submit">Sign out</button>
+    </form>
+  </div>
 </Layout>

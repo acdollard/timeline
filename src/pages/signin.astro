@@ -1,14 +1,14 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
-const { cookies, redirect } = Astro;
+// const { cookies, redirect } = Astro;
 
-const accessToken = cookies.get("sb-access-token");
-const refreshToken = cookies.get("sb-refresh-token");
+// const accessToken = cookies.get("sb-access-token");
+// const refreshToken = cookies.get("sb-refresh-token");
 
-if (accessToken && refreshToken) {
-  return redirect("/dashboard");
-}
+// if (accessToken && refreshToken) {
+//   return redirect("/");
+// }
 ---
 
 <Layout title="Sign in">
@@ -33,14 +33,14 @@ if (accessToken && refreshToken) {
           type="email"
           name="email"
           id="email"
-          class="bg-gray-700 rounded-md p-2"
+          class="bg-gray-700 rounded-md p-2 w-sm"
         />
         <label for="password">Password</label>
         <input
           type="password"
           name="password"
           id="password"
-          class="bg-gray-700 rounded-md p-2"
+          class="bg-gray-700 rounded-md p-2 w-sm"
         />
         <button
           type="submit"
@@ -49,7 +49,12 @@ if (accessToken && refreshToken) {
           Login
         </button>
       </form>
-      <p>New here? <a href="/register">Create an account</a></p>
+      <p>
+        New here?
+        <a href="/register" class="underline hover:text-primary"
+          >Create an account</a
+        >
+      </p>
     </div>
   </div>
 </Layout>

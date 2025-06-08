@@ -1,12 +1,36 @@
 ---
 import "../styles/global.css";
 import Navbar from "../components/Navbar";
+import { supabase } from "../lib/supabase";
 
 interface Props {
   title?: string;
+  requireAuth?: boolean;
 }
 
-const { title = "Timeline" } = Astro.props;
+const { title = "Timeline", requireAuth = false } = Astro.props;
+
+const accessToken = Astro.cookies.get("sb-access-token");
+const refreshToken = Astro.cookies.get("sb-refresh-token");
+
+let session = null;
+if (accessToken && refreshToken) {
+  try {
+    const result = await supabase.auth.setSession({
+      refresh_token: refreshToken.value,
+      access_token: accessToken.value,
+    });
+    if (!result.error) {
+      session = result.data.session;
+    }
+  } catch (error) {
+    // Session is already null, no need to handle error
+  }
+}
+
+if (requireAuth && !session) {
+  return Astro.redirect("/signin");
+}
 ---
 
 <!doctype html>
@@ -17,7 +41,7 @@ const { title = "Timeline" } = Astro.props;
     <title>{title}</title>
   </head>
   <body class="bg-gray-900 min-h-screen">
-    <Navbar client:load />
+    <Navbar client:load initialSession={session} />
     <main>
       <slot />
     </main>

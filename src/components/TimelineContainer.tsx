@@ -10,10 +10,10 @@ import type { Session } from '@supabase/supabase-js';
 
 interface TimelineContainerProps {
   events: TimelineEvent[];
-  initialSession: Session | null;
+  sessionId: string;
 }
 
-const TimelineContainer = ({ events, initialSession }: TimelineContainerProps) => {
+const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   
   const [selectedTypes, setSelectedTypes] = useState<EventType[]>(() => [
     'birth',
@@ -32,34 +32,17 @@ const TimelineContainer = ({ events, initialSession }: TimelineContainerProps) =
   const [error, setError] = useState<string | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [session, setSession] = useState<Session | null>(initialSession);
 
-  // Set up auth state listener
-  useEffect(() => {
-    // Only set up the listener if we don't have an initial session
-    if (!initialSession) {
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
-        console.log("Auth state changed:", _event, session?.user.id);
-        setSession(session);
-      });
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    }
-  }, [initialSession]);
 
   const fetchEvents = async () => {
-    if (!session) return;
+    if (!sessionId) return;
     
     try {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("events")
         .select("*")
-        .eq("user_id", session.user.id)
+        .eq("user_id", sessionId)
         .order("date", { ascending: true });
 
       if (error) throw error;
@@ -76,7 +59,7 @@ const TimelineContainer = ({ events, initialSession }: TimelineContainerProps) =
   // Fetch events when session is available
   useEffect(() => {
     fetchEvents();
-  }, [session]);
+  }, [sessionId]);
 
   // Update filtered events when userEvents or selectedTypes change
   useEffect(() => {
@@ -87,11 +70,11 @@ const TimelineContainer = ({ events, initialSession }: TimelineContainerProps) =
   const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>) => {
     try {
       setIsLoading(true);
-      if (!session) throw new Error('No authenticated user');
+      if (!sessionId) throw new Error('No authenticated user');
       
       const { data, error } = await supabase
         .from('events')
-        .insert([{ ...event, user_id: session.user.id }])
+        .insert([{ ...event, user_id: sessionId }])
         .select()
         .single();
 
@@ -109,13 +92,13 @@ const TimelineContainer = ({ events, initialSession }: TimelineContainerProps) =
   const handleUpdateEvent = async (id: string, event: Omit<TimelineEvent, 'id'>) => {
     try {
       setIsLoading(true);
-      if (!session) throw new Error('No authenticated user');
+      if (!sessionId) throw new Error('No authenticated user');
 
       const { data, error } = await supabase
         .from('events')
         .update(event)
         .eq('id', id)
-        .eq('user_id', session.user.id)
+        .eq('user_id', sessionId)
         .select()
         .single();
 
@@ -133,13 +116,13 @@ const TimelineContainer = ({ events, initialSession }: TimelineContainerProps) =
   const handleDeleteEvent = async (id: string) => {
     try {
       setIsLoading(true);
-      if (!session) throw new Error('No authenticated user');
+      if (!sessionId) throw new Error('No authenticated user');
 
       const { error } = await supabase
         .from('events')
         .delete()
         .eq('id', id)
-        .eq('user_id', session.user.id);
+        .eq('user_id', sessionId);
 
       if (error) throw error;
       await fetchEvents();

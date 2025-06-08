@@ -2,31 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
-const Navbar = () => {
-  const [session, setSession] = useState<Session | null>(null);
+interface NavbarProps {
+  initialSession: Session | null;
+}
+
+const Navbar = ({ initialSession }: NavbarProps) => {
+  const [session, setSession] = useState<Session | null>(initialSession);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/';
-  };
+    setSession(initialSession);
+  }, [initialSession]);
 
   return (
     <nav className="flex flex-row justify-between items-center py-4 w-full px-6">
@@ -41,7 +26,9 @@ const Navbar = () => {
             <li><a href="/summary" className="hover:text-primary transition-colors">My Timeline</a></li>
             <li>
               <button 
-                onClick={handleSignOut}
+                onClick={() => {
+                  window.location.href = '/api/auth/signout';
+                }}
                 className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md transition-colors"
               >
                 Sign Out
@@ -50,12 +37,14 @@ const Navbar = () => {
           </>
         ) : (
           <li>
-            <a 
-              href="/signin"
+            <button 
+              onClick={() => {
+                window.location.href = '/signin';
+              }}
               className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md transition-colors"
             >
               Sign In
-            </a>
+            </button>
           </li>
         )}
       </ul>
