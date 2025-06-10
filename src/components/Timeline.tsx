@@ -66,8 +66,6 @@ const Timeline = ({
     setSelectedEvent(null);
   };
 
-
-
   return (
     <>
       {error && (
@@ -76,7 +74,8 @@ const Timeline = ({
         </div>
       )}
       <div className="timeline-container flex flex-col h-auto">
-        <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
+        {/* Desktop Timeline */}
+        <div id="timeline-line" className="hidden md:block bg-white h-1 flex flex-row relative">
           {eventsWithPosition.map((item) => (
             <div 
               key={item.id}
@@ -87,7 +86,7 @@ const Timeline = ({
               }`}
               style={{ left: `${item.position}%`}}
             >
-              <Pin event={item} isBirth={item.type === "birth"} handleClick={handlePinClick}/>
+              <Pin event={item} isBirth={item.type === "birth"} handleClick={handlePinClick} orientation="horizontal"/>
             </div>
           ))}
           {Array.from({ length: totalYears }).map((_, index) => {
@@ -112,6 +111,47 @@ const Timeline = ({
               </React.Fragment>
             );
           })}
+        </div>
+
+        {/* Mobile Timeline */}
+        <div id="mobile-timeline-line" className="md:hidden w-1 bg-white flex flex-col relative h-[150vh] mx-10">
+        {Array.from({ length: totalYears }).map((_, index) => {
+            const year = birthDate.getFullYear() + index + 1;
+            return (
+              <React.Fragment key={year}>
+                <div
+                  className="h-1 w-4 bg-white absolute translate"
+                  style={{ top: `${((index + 1) / totalYears) * 100}%` }}
+                />
+
+                {index % 5 === 0 && (
+                  <div 
+                    className="absolute left-6 text-white text-xs bg-gray-900 "
+                    style={{ 
+                      top: `${((index + 1) / totalYears) * 100}%`,
+                      transform: 'translateY(-50%) translateX(-210%)'
+                    }}
+                  >
+                    {year}
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
+          {eventsWithPosition.map((item) => (
+            <div 
+              key={item.id}
+              className={`flex flex-row h-auto absolute ${
+                item.type === "birth"
+                  ? "-translate-x-2.5"
+                  : "rotate-180"
+              }`}
+              style={{ top: `${item.position}%`}}
+            >
+              <Pin event={item} isBirth={item.type === "birth"} handleClick={handlePinClick} orientation="vertical"/>
+            </div>
+          ))}
+
         </div>
       </div>
       <EventModal

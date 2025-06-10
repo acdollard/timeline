@@ -175,7 +175,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
 
   return (
     <>
-      <div className="w-full flex flex-col justify-end relative">
+      <div className="w-full flex flex-col justify-end relative align-center sm:mb-24 md:mb-0">
         <div className="my-auto">
           <Timeline 
             events={userEvents} 
