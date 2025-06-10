@@ -19,8 +19,18 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     });
 
     if (error) {
-      console.error("Sign in error:", error.message);
-      return redirect("/signin?error=invalid_credentials");
+      // Handle specific error cases
+      switch (error.message) {
+        case "Invalid login credentials":
+          return redirect("/signin?error=invalid_credentials");
+        case "Email not confirmed":
+          return redirect("/signin?error=email_not_confirmed");
+        case "Invalid email":
+          return redirect("/signin?error=invalid_email_format");
+        default:
+          console.error("Sign in error:", error.message);
+          return redirect("/signin?error=unknown");
+      }
     }
 
     if (data.session) {

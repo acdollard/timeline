@@ -32,7 +32,7 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-darkestGray p-4 border-t md:mb-6 border-gray-700">
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 py-2 border-t md:mb-6 border-gray-700">
       <div className="max-w-screen-xl mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-white text-xl font-semibold">Select Categories To Display</h2>

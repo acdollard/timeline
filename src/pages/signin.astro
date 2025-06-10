@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { supabase } from "../lib/supabase";
 
 const { cookies, redirect, request } = Astro;
 
@@ -7,13 +8,45 @@ const { cookies, redirect, request } = Astro;
 const url = new URL(request.url);
 const error = url.searchParams.get("error");
 
-// If user is already logged in, redirect to home
+// Get tokens from cookies
 const accessToken = cookies.get("sb-access-token");
 const refreshToken = cookies.get("sb-refresh-token");
 
+// Only redirect if we have both tokens and they're valid
 if (accessToken && refreshToken) {
-  return redirect("/");
+  try {
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.setSession({
+      access_token: accessToken.value,
+      refresh_token: refreshToken.value,
+    });
+
+    if (session && !sessionError) {
+      return redirect("/");
+    }
+  } catch (e) {
+    // If there's an error validating the session, continue to show the signin page
+    console.error("Error validating session:", e);
+  }
 }
+
+// Helper function to get error message
+const getErrorMessage = (error: string | null) => {
+  switch (error) {
+    case "invalid_credentials":
+      return "Invalid email or password. Please try again.";
+    case "email_not_confirmed":
+      return "Please confirm your email address before signing in.";
+    case "invalid_email_format":
+      return "Please enter a valid email address.";
+    case "missing_fields":
+      return "Please fill in all required fields.";
+    default:
+      return "An error occurred. Please try again.";
+  }
+};
 ---
 
 <Layout title="Sign in">
@@ -31,11 +64,7 @@ if (accessToken && refreshToken) {
       {
         error && (
           <div class="w-full p-3 bg-red-500/10 border border-red-500/20 rounded-md">
-            <p class="text-sm text-red-400">
-              {error === "invalid_credentials"
-                ? "Invalid email or password. Please try again."
-                : "An error occurred. Please try again."}
-            </p>
+            <p class="text-sm text-red-400">{getErrorMessage(error)}</p>
           </div>
         )
       }
