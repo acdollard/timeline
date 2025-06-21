@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { getPinColor } from '../utils/pinColors';
-import type { EventType } from '../utils/pinColors';
 import type { TimelineEvent } from '../types/events';
 
 interface PinProps {
@@ -26,11 +25,17 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
     <>
       <div 
         className="pin relative"
-        onPointerEnter={() => setShowTooltip(true)}
-        onPointerLeave={() => setShowTooltip(false)}
+        onPointerEnter={() => {
+          setShowTooltip(true)
+          console.log('pointer enter')
+        }}
+        onPointerLeave={() => {
+          setShowTooltip(false)
+          console.log('pointer leave')
+        }}
       >
         <div
-          className={`event h-6 w-6 hover:scale-150 ${getPinColor(event.type)} rounded-full transition-all duration-200 absolute ${
+          className={`event ${getPinColor(event.type)} rounded-full transition-all duration-200 absolute h-6 w-6 hover:scale-150 ${
             orientation === 'horizontal' 
               ? 'left-1/2 -translate-x-1/2' 
               : 'top-1/2 -translate-y-1/2'

@@ -22,8 +22,6 @@ const eventTypes: EventType[] = [
 
 const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) => {
   const [selectedTypes, setSelectedTypes] = useState<EventType[]>(eventTypes);
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const handleTypeToggle = (type: EventType) => {
     const newSelectedTypes = selectedTypes.includes(type)
       ? selectedTypes.filter(t => t !== type)
@@ -34,29 +32,10 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 transition-all duration-300 ease-in-out"
-         style={{ 
-           height: isExpanded ? 'auto' : '4rem',
-           overflow: 'hidden'
-         }}>
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 p-4 border-t md:mb-6 border-gray-700">
       <div className="max-w-screen-xl mx-auto">
-        <div className="flex justify-between items-center p-4">
-          <div className="flex items-center space-x-3">
-            <h2 className="text-white text-xl font-semibold">Select Categories To Display</h2>
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <svg
-                className={`w-6 h-6 transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-white text-xl font-semibold">Select Categories To Display</h2>
           <button
             onClick={onAddClick}
             className="bg-primary hover:bg-white text-white hover:text-primary px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
@@ -73,7 +52,7 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
           </button>
         </div>
         
-        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 transition-all duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {eventTypes.map(type => ( type !== 'birth' &&
             <button
               key={type}

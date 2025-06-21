@@ -94,7 +94,7 @@ const Timeline = ({
             return (
               <React.Fragment key={year}>
                 <div
-                  className="w-1 h-4 bg-white absolute"
+                  className="w-0.5 h-4 bg-white absolute"
                   style={{ left: `${((index + 1) / totalYears) * 100}%` }}
                 />
                 {index % 5 === 0 && (
@@ -120,7 +120,7 @@ const Timeline = ({
             return (
               <React.Fragment key={year}>
                 <div
-                  className="h-1 w-4 bg-white absolute translate"
+                  className="h-1 w-2 bg-white absolute translate"
                   style={{ top: `${((index + 1) / totalYears) * 100}%` }}
                 />
 
