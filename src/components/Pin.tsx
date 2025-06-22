@@ -17,6 +17,15 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
     day: 'numeric'
   });
 
+  // Get color from event_types if available, otherwise fall back to legacy type
+  const getEventColor = () => {
+    if (event.event_types?.color) {
+      return event.event_types.color;
+    }
+    // Fall back to legacy type-based color
+    return getPinColor(event.type || 'default');
+  };
+
   const tooltipClasses = orientation === 'horizontal' 
     ? "absolute md:-translate-x-1/2 md:-top-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap"
     : "absolute -translate-y-1/2 -right-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap";
@@ -35,11 +44,17 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
         }}
       >
         <div
-          className={`event ${getPinColor(event.type)} rounded-full transition-all duration-200 absolute h-6 w-6 hover:scale-150 ${
-            orientation === 'horizontal' 
-              ? 'left-1/2 -translate-x-1/2' 
-              : 'top-1/2 -translate-y-1/2'
-          } cursor-pointer`}
+          className="event rounded-full transition-all duration-200 absolute h-6 w-6 hover:scale-150 cursor-pointer"
+          style={{ 
+            backgroundColor: getEventColor(),
+            left: orientation === 'horizontal' ? '50%' : undefined,
+            top: orientation === 'vertical' ? '50%' : undefined,
+            transform: orientation === 'horizontal' 
+              ? 'translateX(-50%)' 
+              : orientation === 'vertical' 
+                ? 'translateY(-50%)' 
+                : undefined
+          }}
           onClick={() => handleClick(event)}
         />
         {showTooltip && (

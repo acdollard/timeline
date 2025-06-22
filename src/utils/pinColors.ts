@@ -1,38 +1,61 @@
-export type EventType = 'birth' | 'school' | 'travel' | 'relationships' | 'move' | 'career' | 'pets' | 'bucket-list' | 'hobbies' | string;
+import type { EventType } from '../types/eventTypes';
 
-export const EVENT_TYPES: EventType[] = [
+// Legacy type for backward compatibility
+export type LegacyEventType = 'birth' | 'school' | 'travel' | 'relationships' | 'move' | 'career' | 'bucket-list' | 'hobbies' | string;
+
+// Default color mapping for backward compatibility
+const DEFAULT_COLORS: Record<string, string> = {
+  'birth': '#EF4444',
+  'school': '#10B981',
+  'travel': '#F59E0B',
+  'relationships': '#EC4899',
+  'move': '#8B5CF6',
+  'career': '#06B6D4',
+  'bucket-list': '#F97316',
+  'hobbies': '#6366F1'
+};
+
+// Get color for event type - supports both legacy string types and new EventType objects
+export const getPinColor = (eventType: string | EventType): string => {
+  if (typeof eventType === 'string') {
+    // Legacy support for string-based event types
+    return DEFAULT_COLORS[eventType] || '#3B82F6';
+  } else {
+    // New EventType object with custom colors
+    return eventType.color || '#3B82F6';
+  }
+};
+
+// Legacy event types array for backward compatibility
+export const EVENT_TYPES: LegacyEventType[] = [
   'birth',
   'school',
   'travel',
   'relationships',
   'move',
   'career',
-  'pets',
   'bucket-list',
   'hobbies'
 ];
 
-export const getPinColor = (type: EventType): string => {
-  switch (type) {
-    case 'birth':
-      return ' bg-gradient-to-r from-white to-gray-300';
-    case 'school':
-      return 'bg-gradient-to-r from-blue-500 to-blue-700 ';
-    case 'travel':
-      return 'bg-gradient-to-r from-red-500 to-red-700';
-    case 'relationships':
-      return 'bg-gradient-to-r from-pink-500 to-pink-700';
-    case 'move':
-      return 'bg-gradient-to-r from-purple-500 to-purple-700';
-    case 'career':
-      return 'bg-gradient-to-r from-green-500 to-green-700';
-    case 'pets':
-      return 'bg-gradient-to-r from-yellow-500 to-yellow-700';
-    case 'bucket-list':
-      return 'bg-gradient-to-r from-orange-500 to-orange-700';
-    case 'hobbies':
-      return 'bg-gradient-to-r from-teal-500 to-teal-700';
-    default:
-      return 'bg-gray-500';
+// Get display name for event type
+export const getEventTypeDisplayName = (eventType: string | EventType): string => {
+  if (typeof eventType === 'string') {
+    // Legacy support - convert kebab-case to Title Case
+    return eventType.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+  } else {
+    // New EventType object with display name
+    return eventType.displayName;
+  }
+};
+
+// Get icon for event type
+export const getEventTypeIcon = (eventType: string | EventType): string | undefined => {
+  if (typeof eventType === 'string') {
+    // Legacy support - no icons for string types
+    return undefined;
+  } else {
+    // New EventType object with icon
+    return eventType.icon;
   }
 }; 

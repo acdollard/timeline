@@ -1,37 +1,104 @@
-import React, { useState } from 'react';
-import { getPinColor } from '../utils/pinColors';
-import type { EventType } from '../utils/pinColors';
+import React, { useState, useEffect } from 'react';
+import { getPinColor, getEventTypeDisplayName } from '../utils/pinColors';
+import type { EventType } from '../types/eventTypes';
+import { logger } from '../utils/logger';
 
 interface TimelineFiltersProps {
-  onFilterChange: (selectedTypes: EventType[]) => void;
+  onFilterChange: (selectedTypes: string[]) => void;
   onAddClick: () => void;
   children?: React.ReactNode;
 }
 
-const eventTypes: EventType[] = [
-  'birth',
-  'school',
-  'travel',
-  'relationships',
-  'move',
-  'career',
-  'pets',
-  'bucket-list',
-  'hobbies'
-];
-
 const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) => {
-  const [selectedTypes, setSelectedTypes] = useState<EventType[]>(eventTypes);
+  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleTypeToggle = (type: EventType) => {
-    const newSelectedTypes = selectedTypes.includes(type)
-      ? selectedTypes.filter(t => t !== type)
-      : [...selectedTypes, type];
-    
-    setSelectedTypes(newSelectedTypes);
-    onFilterChange(newSelectedTypes);
+  // Fetch event types from API
+  const fetchEventTypes = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await fetch('/api/event-types');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch event types: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      setEventTypes(data);
+      
+      // Initialize with all event types selected (including birth for timeline calculation)
+      const initialSelectedIds = data.map((type: EventType) => type.id);
+      
+      setSelectedTypeIds(initialSelectedIds);
+      onFilterChange(initialSelectedIds);
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch event types';
+      logger.error('Failed to fetch event types', { error: errorMessage });
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchEventTypes();
+  }, []);
+
+  const handleTypeToggle = (typeId: string) => {
+    const newSelectedTypeIds = selectedTypeIds.includes(typeId)
+      ? selectedTypeIds.filter(id => id !== typeId)
+      : [...selectedTypeIds, typeId];
+    
+    setSelectedTypeIds(newSelectedTypeIds);
+    onFilterChange(newSelectedTypeIds);
+  };
+
+  const handleRefresh = () => {
+    fetchEventTypes();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="flex justify-between items-center">
+            <h2 className="text-white text-xl font-semibold">Loading event types...</h2>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4">
+        <div className="max-w-screen-xl mx-auto">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-white text-xl font-semibold">Error loading event types</h2>
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+            <button
+              onClick={handleRefresh}
+              className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Separate default and custom event types
+  const defaultEventTypes = eventTypes.filter(type => type.isDefault);
+  const customEventTypes = eventTypes.filter(type => !type.isDefault);
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 transition-all duration-300 ease-in-out"
@@ -74,20 +141,57 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
         </div>
         
         <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 p-4 transition-all duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
-          {eventTypes.map(type => ( type !== 'birth' &&
+          {/* Default Event Types */}
+          {defaultEventTypes.map(type => (
             <button
-              key={type}
-              onClick={() => handleTypeToggle(type)}
+              key={type.id}
+              onClick={() => type.name !== 'birth' && handleTypeToggle(type.id)}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
-                selectedTypes.includes(type)
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                type.name === 'birth' 
+                  ? 'bg-gray-600 text-gray-300 cursor-not-allowed' // Birth events are always selected and non-toggleable
+                  : selectedTypeIds.includes(type.id)
+                    ? 'bg-gray-700 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
+              disabled={type.name === 'birth'}
             >
-              <div className={`w-4 h-4 rounded-full ${getPinColor(type)}`} />
-              <span className="capitalize">{type.replace('-', ' ')}</span>
+              <div 
+                className="w-4 h-4 rounded-full" 
+                style={{ backgroundColor: type.color }}
+              />
+              <span>{type.displayName}</span>
+              {type.name === 'birth' && (
+                <span className="text-xs text-gray-400">(Required)</span>
+              )}
             </button>
           ))}
+          
+          {/* Custom Event Types */}
+          {customEventTypes.length > 0 && (
+            <>
+              {customEventTypes.length > 0 && defaultEventTypes.length > 0 && (
+                <div className="col-span-full border-t border-gray-700 my-2"></div>
+              )}
+              {customEventTypes.map(type => (
+                <button
+                  key={type.id}
+                  onClick={() => handleTypeToggle(type.id)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                    selectedTypeIds.includes(type.id)
+                      ? 'bg-gray-700 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <div 
+                    className="w-4 h-4 rounded-full" 
+                    style={{ backgroundColor: type.color }}
+                  />
+                  <span>{type.displayName}</span>
+                  <span className="text-xs text-gray-500">(Custom)</span>
+                </button>
+              ))}
+            </>
+          )}
         </div>
       </div>
     </div>

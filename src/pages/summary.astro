@@ -31,6 +31,8 @@ const { data: events } = await supabase
   .select("*")
   .eq("user_id", session.user.id)
   .order("date", { ascending: true });
+
+console.log(events);
 ---
 
 <Layout>
