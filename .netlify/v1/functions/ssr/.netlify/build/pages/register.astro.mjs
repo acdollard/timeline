@@ -1,0 +1,69 @@
+import { e as createComponent, f as createAstro, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_DuNtUCWs.mjs';
+import 'kleur/colors';
+import { $ as $$Layout } from '../chunks/Layout_DKDPCBi2.mjs';
+import { s as supabase } from '../chunks/supabase_riZVRtFr.mjs';
+export { renderers } from '../renderers.mjs';
+
+const $$Astro = createAstro();
+const $$Register = createComponent(async ($$result, $$props, $$slots) => {
+  const Astro2 = $$result.createAstro($$Astro, $$props, $$slots);
+  Astro2.self = $$Register;
+  const { cookies, redirect, request } = Astro2;
+  const url = new URL(request.url);
+  const error = url.searchParams.get("error");
+  const accessToken = cookies.get("sb-access-token");
+  const refreshToken = cookies.get("sb-refresh-token");
+  if (accessToken && refreshToken) {
+    try {
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.setSession({
+        access_token: accessToken.value,
+        refresh_token: refreshToken.value
+      });
+      if (session && !sessionError) {
+        return redirect("/");
+      }
+    } catch (e) {
+      console.error("Error validating session:", e);
+    }
+  }
+  const getErrorMessage = (error2) => {
+    switch (error2) {
+      case "email_exists":
+        return "An account with this email already exists.";
+      case "password_too_short":
+        return "Password must be at least 6 characters long.";
+      case "invalid_email_format":
+        return "Please enter a valid email address.";
+      case "missing_fields":
+        return "Please fill in all required fields.";
+      default:
+        return "An error occurred. Please try again.";
+    }
+  };
+  return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Register" }, { "default": async ($$result2) => renderTemplate` ${maybeRenderHead()}<div class="flex flex-col items-center justify-center h-screen bg-darkestGray"> <div class="bg-gray-800 rounded-lg flex flex-col items-center justify-center gap-4 w-full max-w-md p-8 text-white"> <h1 class="text-2xl font-bold">Create an account</h1> <p class="text-sm text-gray-400">
+Join us to start building your timeline.
+</p> ${error && renderTemplate`<div class="w-full p-3 bg-red-500/10 border border-red-500/20 rounded-md"> <p class="text-sm text-red-400">${getErrorMessage(error)}</p> </div>`} <form action="/api/auth/register" method="post" class="flex flex-col items-center justify-center gap-4 w-full"> <div class="w-full"> <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email</label> <input type="email" name="email" id="email" required class="w-full bg-gray-700 rounded-md p-2 text-white focus:outline-none focus:ring-2 focus:ring-primary"> </div> <div class="w-full"> <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label> <input type="password" name="password" id="password" required minlength="6" class="w-full bg-gray-700 rounded-md p-2 text-white focus:outline-none focus:ring-2 focus:ring-primary"> <p class="text-xs text-gray-400 mt-1">
+Password must be at least 6 characters long
+</p> </div> <button type="submit" class="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">
+Create Account
+</button> </form> <p class="text-sm text-gray-400">
+Already have an account?
+<a href="/signin" class="text-primary hover:text-primary/90 ml-1">Sign in</a> </p> </div> </div> ` })}`;
+}, "/Users/alexanderdollard/Development/timeline/storming-spectrum/src/pages/register.astro", void 0);
+
+const $$file = "/Users/alexanderdollard/Development/timeline/storming-spectrum/src/pages/register.astro";
+const $$url = "/register";
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  default: $$Register,
+  file: $$file,
+  url: $$url
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };
