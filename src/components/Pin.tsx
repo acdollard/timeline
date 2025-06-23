@@ -23,7 +23,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
       return event.event_types.color;
     }
     // Fall back to legacy type-based color
-    return getPinColor(event.type || 'default');
+    return getPinColor(event.type || 'birth');
   };
 
   const tooltipClasses = orientation === 'horizontal' 

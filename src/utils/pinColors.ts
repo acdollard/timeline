@@ -19,10 +19,10 @@ const DEFAULT_COLORS: Record<string, string> = {
 export const getPinColor = (eventType: string | EventType): string => {
   if (typeof eventType === 'string') {
     // Legacy support for string-based event types
-    return DEFAULT_COLORS[eventType] || '#3B82F6';
+    return DEFAULT_COLORS[eventType] || '#c2c2c2';
   } else {
     // New EventType object with custom colors
-    return eventType.color || '#3B82F6';
+    return eventType.color || '#c2c2c2';
   }
 };
 
