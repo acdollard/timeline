@@ -36,11 +36,9 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
         className="pin relative"
         onPointerEnter={() => {
           setShowTooltip(true)
-          console.log('pointer enter')
         }}
         onPointerLeave={() => {
           setShowTooltip(false)
-          console.log('pointer leave')
         }}
       >
         <div

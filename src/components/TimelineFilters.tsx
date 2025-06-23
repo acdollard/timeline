@@ -30,11 +30,9 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
       const data = await response.json();
       setEventTypes(data);
       
-      // Initialize with all event types selected (including birth for timeline calculation)
-      const initialSelectedIds = data.map((type: EventType) => type.id);
-      
-      setSelectedTypeIds(initialSelectedIds);
-      onFilterChange(initialSelectedIds);
+      // Initialize with no event types selected (show all by default)
+      setSelectedTypeIds([]);
+      onFilterChange([]);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch event types';
@@ -50,9 +48,11 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
   }, []);
 
   const handleTypeToggle = (typeId: string) => {
+    // If this type is already selected, deselect it (show all)
+    // If this type is not selected, select only this type (show only this type)
     const newSelectedTypeIds = selectedTypeIds.includes(typeId)
-      ? selectedTypeIds.filter(id => id !== typeId)
-      : [...selectedTypeIds, typeId];
+      ? [] // Deselect all (show all events)
+      : [typeId]; // Select only this type (show only this type)
     
     setSelectedTypeIds(newSelectedTypeIds);
     onFilterChange(newSelectedTypeIds);
@@ -109,7 +109,17 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
       <div className="max-w-screen-xl mx-auto">
         <div className="flex justify-between items-center p-4">
           <div className="flex items-center space-x-3">
-            <h2 className="text-white text-xl font-semibold">Select Categories To Display</h2>
+            <h2 className="text-white text-xl font-semibold">Event Categories</h2>
+            {selectedTypeIds.length > 0 && (
+              <span className="text-sm text-primary bg-primary/10 px-2 py-1 rounded">
+                Showing only {eventTypes.find(t => t.id === selectedTypeIds[0])?.displayName}
+              </span>
+            )}
+            {selectedTypeIds.length === 0 && (
+              <span className="text-sm text-gray-400 bg-gray-700/50 px-2 py-1 rounded">
+                Showing all events
+              </span>
+            )}
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-gray-400 hover:text-white transition-colors"
@@ -150,8 +160,10 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
                 type.name === 'birth' 
                   ? 'bg-gray-600 text-gray-300 cursor-not-allowed' // Birth events are always selected and non-toggleable
                   : selectedTypeIds.includes(type.id)
-                    ? 'bg-gray-700 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                    ? 'bg-primary text-white' // Selected - show only this type
+                    : selectedTypeIds.length === 0
+                      ? 'bg-gray-700 text-white' // No selection - show all (this type is visible)
+                      : 'text-gray-400 hover:text-white hover:bg-gray-800' // Not selected - this type is hidden
               }`}
               disabled={type.name === 'birth'}
             >
@@ -162,6 +174,9 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
               <span>{type.displayName}</span>
               {type.name === 'birth' && (
                 <span className="text-xs text-gray-400">(Required)</span>
+              )}
+              {selectedTypeIds.includes(type.id) && type.name !== 'birth' && (
+                <span className="text-xs text-gray-300">(Only)</span>
               )}
             </button>
           ))}
@@ -178,8 +193,10 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
                   onClick={() => handleTypeToggle(type.id)}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${
                     selectedTypeIds.includes(type.id)
-                      ? 'bg-gray-700 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      ? 'bg-primary text-white' // Selected - show only this type
+                      : selectedTypeIds.length === 0
+                        ? 'bg-gray-700 text-white' // No selection - show all (this type is visible)
+                        : 'text-gray-400 hover:text-white hover:bg-gray-800' // Not selected - this type is hidden
                   }`}
                 >
                   <div 
@@ -188,6 +205,9 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
                   />
                   <span>{type.displayName}</span>
                   <span className="text-xs text-gray-500">(Custom)</span>
+                  {selectedTypeIds.includes(type.id) && (
+                    <span className="text-xs text-gray-300">(Only)</span>
+                  )}
                 </button>
               ))}
             </>

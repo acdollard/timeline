@@ -64,7 +64,13 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       if (event.event_types?.name === 'birth' || event.type === 'birth') {
         return true;
       }
-      // Include events that match selected type IDs
+      
+      // If no event types are selected, show all events
+      if (selectedTypeIds.length === 0) {
+        return true;
+      }
+      
+      // If event types are selected, only show events that match selected type IDs
       return selectedTypeIds.includes(event.event_type_id);
     });
     setFilteredEvents(filtered);
