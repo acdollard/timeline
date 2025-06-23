@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { TimelineEvent } from '../types/events';
-import type { EventType } from '../utils/pinColors';
-import { EVENT_TYPES } from '../utils/pinColors';
-import CustomSelect from './CustomSelect';
+import type { EventType } from '../types/eventTypes';
 
 interface EventFormModalProps {
   isOpen: boolean;
@@ -16,38 +14,94 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
   const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>({
     name: '',
     date: '',
-    type: 'birth',
+    event_type_id: '',
+    type: '',
     description: ''
   });
+  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch event types when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchEventTypes();
+    }
+  }, [isOpen]);
+
+  const fetchEventTypes = async () => {
+    try {
+      const response = await fetch('/api/event-types');
+      if (!response.ok) {
+        throw new Error('Failed to fetch event types');
+      }
+      const data = await response.json();
+      setEventTypes(data);
+      
+      // Set default event type if none is selected
+      if (!formData.event_type_id && data.length > 0) {
+        const birthType = data.find((type: EventType) => type.name === 'birth');
+        if (birthType) {
+          setFormData(prev => ({ 
+            ...prev, 
+            event_type_id: birthType.id,
+            type: birthType.name
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch event types:', error);
+    }
+  };
 
   useEffect(() => {
     if (initialEvent) {
       setFormData({
         name: initialEvent.name,
         date: initialEvent.date,
-        type: initialEvent.type,
-        description: initialEvent.description
+        event_type_id: initialEvent.event_type_id || '',
+        type: initialEvent.type || '',
+        description: initialEvent.description || ''
+      });
+    } else {
+      // Reset form for new events
+      setFormData({
+        name: '',
+        date: '',
+        event_type_id: '',
+        type: '',
+        description: ''
       });
     }
   }, [initialEvent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.event_type_id) {
+      alert('Please select an event type');
+      return;
+    }
+    
     try {
+      setIsLoading(true);
       await onSubmit(formData);
       onClose();
     } catch (error) {
       // Error is handled by the parent component
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDelete = async () => {
     if (initialEvent && onDelete) {
       try {
+        setIsLoading(true);
         await onDelete(initialEvent.id);
         onClose();
       } catch (error) {
         // Error is handled by the parent component
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -84,16 +138,26 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
           <div>
             <label className="block text-white mb-1">Type</label>
             <select
-              value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value as EventType })}
+              value={formData.event_type_id}
+              onChange={(e) => {
+                const selectedType = eventTypes.find(type => type.id === e.target.value);
+                setFormData({ 
+                  ...formData, 
+                  event_type_id: e.target.value,
+                  type: selectedType?.name || ''
+                });
+              }}
               className="w-full bg-gray-700 text-white rounded px-3 py-2"
               required
             >
-              {EVENT_TYPES.map((type: EventType) => (
-                <option key={type} value={type}>
-                  {type.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                </option>
-              ))}
+              <option value="">Select an event type</option>
+              {eventTypes
+                .filter((type: EventType) => type.name !== 'birth')
+                .map((type: EventType) => (
+                  <option key={type.id} value={type.id}>
+                    {type.displayName}
+                  </option>
+                ))}
             </select>
           </div>
           <div>
@@ -108,15 +172,17 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
           <div className="flex justify-between">
             <button
               type="submit"
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
+              disabled={isLoading}
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
             >
-              {initialEvent ? 'Update Event' : 'Create Event'}
+              {isLoading ? 'Saving...' : (initialEvent ? 'Update Event' : 'Create Event')}
             </button>
             {initialEvent && onDelete && (
               <button
                 type="button"
                 onClick={handleDelete}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                disabled={isLoading}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
               >
                 Delete Event
               </button>
@@ -124,7 +190,8 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+              disabled={isLoading}
+              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 disabled:opacity-50"
             >
               Cancel
             </button>

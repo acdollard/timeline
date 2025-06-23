@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Pin from './Pin';
-import type { EventType } from '../utils/pinColors';
 import EventModal from './EventModal';
 import EventFormModal from './EventFormModal';
 import type { TimelineEvent } from '../types/events';
@@ -30,7 +29,7 @@ const Timeline = ({
   const [showUpdateForm, setShowUpdateForm] = useState(false);
 
   // Find the birth date and calculate the total timeline span
-  const birthEvent = events.find(item => item.type === "birth");
+  const birthEvent = events.find(item => item.event_types?.name === "birth" || item.type === "birth");
 
   const birthDate = new Date(birthEvent?.date || '');
   const today = new Date();
@@ -66,6 +65,11 @@ const Timeline = ({
     setSelectedEvent(null);
   };
 
+  // Helper function to check if an event is a birth event
+  const isBirthEvent = (event: TimelineEvent) => {
+    return event.event_types?.name === "birth" || event.type === "birth";
+  };
+
   return (
     <>
       {error && (
@@ -75,18 +79,18 @@ const Timeline = ({
       )}
       <div className="timeline-container flex flex-col h-auto">
         {/* Desktop Timeline */}
-        <div id="timeline-line" className="hidden md:block bg-white h-1 flex flex-row relative">
+        <div id="timeline-line" className="md:block bg-white h-1 flex flex-row relative hidden">
           {eventsWithPosition.map((item) => (
             <div 
               key={item.id}
               className={`flex flex-col h-auto absolute ${
-                item.type === "birth"
+                isBirthEvent(item)
                   ? "-translate-y-2.5"
                   : "-translate-y-full"
               }`}
               style={{ left: `${item.position}%`}}
             >
-              <Pin event={item} isBirth={item.type === "birth"} handleClick={handlePinClick} orientation="horizontal"/>
+              <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} orientation="horizontal"/>
             </div>
           ))}
           {Array.from({ length: totalYears }).map((_, index) => {
@@ -94,7 +98,7 @@ const Timeline = ({
             return (
               <React.Fragment key={year}>
                 <div
-                  className="w-1 h-4 bg-white absolute"
+                  className="w-0.5 h-4 bg-white absolute"
                   style={{ left: `${((index + 1) / totalYears) * 100}%` }}
                 />
                 {index % 5 === 0 && (
@@ -120,7 +124,7 @@ const Timeline = ({
             return (
               <React.Fragment key={year}>
                 <div
-                  className="h-1 w-4 bg-white absolute translate"
+                  className="h-1 w-2 bg-white absolute translate"
                   style={{ top: `${((index + 1) / totalYears) * 100}%` }}
                 />
 
@@ -142,13 +146,13 @@ const Timeline = ({
             <div 
               key={item.id}
               className={`flex flex-row h-auto absolute ${
-                item.type === "birth"
+                isBirthEvent(item)
                   ? "-translate-x-2.5"
                   : "rotate-180"
               }`}
               style={{ top: `${item.position}%`}}
             >
-              <Pin event={item} isBirth={item.type === "birth"} handleClick={handlePinClick} orientation="vertical"/>
+              <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} orientation="vertical"/>
             </div>
           ))}
 

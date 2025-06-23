@@ -1,12 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Timeline from './Timeline';
 import TimelineFilters from './TimelineFilters';
-import type { EventType } from '../utils/pinColors';
 import type { TimelineEvent } from '../types/events';
-import { eventService } from '../services/eventService';
 import EventFormModal from './EventFormModal';
 import { supabase } from '../lib/supabase';
-import type { Session } from '@supabase/supabase-js';
 
 interface TimelineContainerProps {
   events: TimelineEvent[];
@@ -15,24 +12,13 @@ interface TimelineContainerProps {
 
 const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   
-  const [selectedTypes, setSelectedTypes] = useState<EventType[]>(() => [
-    'birth',
-    'school',
-    'travel',
-    'relationships',
-    'move',
-    'career',
-    'pets',
-    'bucket-list',
-    'hobbies'
-  ]);
-
+  const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [userEvents, setUserEvents] = useState<TimelineEvent[]>(events);
   const [filteredEvents, setFilteredEvents] = useState<TimelineEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [selectedEventType, setSelectedEventType] = useState<{ id: string; displayName: string } | null>(null);
 
   const fetchEvents = async () => {
     if (!sessionId) return;
@@ -41,13 +27,23 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("events")
-        .select("*")
+        .select(`
+          *,
+          event_types (
+            id,
+            name,
+            display_name,
+            color,
+            icon
+          )
+        `)
         .eq("user_id", sessionId)
         .order("date", { ascending: true });
 
       if (error) throw error;
       setUserEvents(data || []);
       setError(null);
+      console.log(data);
     } catch (err) {
       console.error('Failed to fetch events:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch events');
@@ -61,11 +57,33 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     fetchEvents();
   }, [sessionId]);
 
-  // Update filtered events when userEvents or selectedTypes change
+  // Update filtered events when userEvents or selectedTypeIds change
   useEffect(() => {
     console.log("Updating filtered events");
-    setFilteredEvents(userEvents.filter(event => selectedTypes.includes(event.type)));
-  }, [selectedTypes, userEvents]);
+    const filtered = userEvents.filter(event => {
+      // Always include birth events
+      if (event.event_types?.name === 'birth' || event.type === 'birth') {
+        return true;
+      }
+      
+      // If no event types are selected, show all events
+      if (selectedTypeIds.length === 0) {
+        return true;
+      }
+      
+      // If event types are selected, only show events that match selected type IDs
+      return selectedTypeIds.includes(event.event_type_id);
+    });
+    setFilteredEvents(filtered);
+  }, [selectedTypeIds, userEvents]);
+
+  // Update heading when selected event type changes
+  useEffect(() => {
+    const heading = document.getElementById('timeline-heading');
+    if (heading) {
+      heading.textContent = selectedEventType ? selectedEventType.displayName : 'Summary Page';
+    }
+  }, [selectedEventType]);
 
   const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>) => {
     try {
@@ -75,7 +93,16 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       const { data, error } = await supabase
         .from('events')
         .insert([{ ...event, user_id: sessionId }])
-        .select()
+        .select(`
+          *,
+          event_types (
+            id,
+            name,
+            display_name,
+            color,
+            icon
+          )
+        `)
         .single();
 
       if (error) throw error;
@@ -99,7 +126,16 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         .update(event)
         .eq('id', id)
         .eq('user_id', sessionId)
-        .select()
+        .select(`
+          *,
+          event_types (
+            id,
+            name,
+            display_name,
+            color,
+            icon
+          )
+        `)
         .single();
 
       if (error) throw error;
@@ -135,7 +171,23 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     }
   };
 
-  const hasBirthEvent = userEvents.some(event => event.type === 'birth');
+  const hasBirthEvent = userEvents.some(event => event.event_types?.name === 'birth');
+
+  const handleFilterChange = (selectedTypes: string[]) => {
+    setSelectedTypeIds(selectedTypes);
+    // Update selected event type for heading
+    if (selectedTypes.length === 0) {
+      setSelectedEventType(null);
+    } else {
+      // Find the event type details
+      const eventType = userEvents.find(event => event.event_type_id === selectedTypes[0])?.event_types;
+      if (eventType) {
+        const selectedType = { id: selectedTypes[0], displayName: (eventType as any).display_name };
+        console.log(selectedType);
+        setSelectedEventType(selectedType);
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -163,7 +215,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
           onClose={() => setShowFormModal(false)}
           onSubmit={handleCreateEvent}
           initialEvent={{
-            type: 'birth',
+            event_type_id: '', // Will be set when user selects birth type
             name: '',
             date: '',
             description: ''
@@ -178,7 +230,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       <div className="w-full flex flex-col justify-end relative align-center sm:mb-24 md:mb-0">
         <div className="my-auto">
           <Timeline 
-            events={userEvents} 
+            events={filteredEvents} 
             setShowFormModal={setShowFormModal} 
             showFormModal={showFormModal} 
             handleCreateEvent={handleCreateEvent}
@@ -192,7 +244,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
 
       <div className="w-full flex flex-col justify-end relative">     
         <TimelineFilters
-          onFilterChange={setSelectedTypes}
+          onFilterChange={handleFilterChange}
           onAddClick={() => setShowFormModal(true)}
         />
         <EventFormModal

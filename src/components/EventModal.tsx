@@ -1,6 +1,5 @@
 import React from 'react';
 import { getPinColor } from '../utils/pinColors';
-import type { EventType } from '../utils/pinColors';
 import type { TimelineEvent } from '../types/events';
 
 interface EventModalProps {
@@ -32,7 +31,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onUpdat
         </button>
         
         <div className="flex items-center space-x-3 mb-4">
-          <div className={`w-4 h-4 rounded-full ${getPinColor(event.type)}`} />
+          <div className={`w-4 h-4 rounded-full ${getPinColor(event.type || 'birth')}`} />
           <h2 className="text-xl font-semibold text-white">{event.name}</h2>
         </div>
         
@@ -44,7 +43,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onUpdat
           
           <div>
             <p className="text-gray-400 text-sm">Type</p>
-            <p className="text-white capitalize">{event.type.replace('-', ' ')}</p>
+            <p className="text-white capitalize">{event.type?.replace('-', ' ')}</p>
           </div>
           
           {event.description && (
