@@ -18,6 +18,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   const [error, setError] = useState<string | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEventType, setSelectedEventType] = useState<{ id: string; displayName: string } | null>(null);
 
   const fetchEvents = async () => {
     if (!sessionId) return;
@@ -75,6 +76,14 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     });
     setFilteredEvents(filtered);
   }, [selectedTypeIds, userEvents]);
+
+  // Update heading when selected event type changes
+  useEffect(() => {
+    const heading = document.getElementById('timeline-heading');
+    if (heading) {
+      heading.textContent = selectedEventType ? selectedEventType.displayName : 'Summary Page';
+    }
+  }, [selectedEventType]);
 
   const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>) => {
     try {
@@ -164,6 +173,22 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
 
   const hasBirthEvent = userEvents.some(event => event.event_types?.name === 'birth');
 
+  const handleFilterChange = (selectedTypes: string[]) => {
+    setSelectedTypeIds(selectedTypes);
+    // Update selected event type for heading
+    if (selectedTypes.length === 0) {
+      setSelectedEventType(null);
+    } else {
+      // Find the event type details
+      const eventType = userEvents.find(event => event.event_type_id === selectedTypes[0])?.event_types;
+      if (eventType) {
+        const selectedType = { id: selectedTypes[0], displayName: (eventType as any).display_name };
+        console.log(selectedType);
+        setSelectedEventType(selectedType);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -219,7 +244,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
 
       <div className="w-full flex flex-col justify-end relative">     
         <TimelineFilters
-          onFilterChange={setSelectedTypeIds}
+          onFilterChange={handleFilterChange}
           onAddClick={() => setShowFormModal(true)}
         />
         <EventFormModal

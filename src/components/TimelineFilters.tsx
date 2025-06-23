@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { getPinColor, getEventTypeDisplayName } from '../utils/pinColors';
 import type { EventType } from '../types/eventTypes';
 import { logger } from '../utils/logger';
 

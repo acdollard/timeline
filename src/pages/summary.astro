@@ -31,13 +31,13 @@ const { data: events } = await supabase
   .select("*")
   .eq("user_id", session.user.id)
   .order("date", { ascending: true });
-
-console.log(events);
 ---
 
 <Layout>
   <div class="container mx-auto px-4 py-8">
-    <h1 class="text-4xl font-bold text-white mb-8">My Timeline</h1>
+    <h1 id="timeline-heading" class="text-4xl font-bold text-white mb-8">
+      Summary Page
+    </h1>
     <div
       class="w-full min-h-[45vh] rounded-lg flex flex-col justify-end items-center relative pb-18"
     >
