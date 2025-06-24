@@ -42,16 +42,31 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
         }}
       >
         <div
-          className="event rounded-full transition-all duration-200 absolute h-6 w-6 hover:scale-150 cursor-pointer"
+          className="event rounded-full transition-all duration-200 absolute h-6 w-6 cursor-pointer"
           style={{ 
             backgroundColor: getEventColor(),
             left: orientation === 'horizontal' ? '50%' : undefined,
             top: orientation === 'vertical' ? '50%' : undefined,
             transform: orientation === 'horizontal' 
-              ? 'translateX(-50%)' 
+              ? 'translateX(-50%) scale(1)' 
               : orientation === 'vertical' 
-                ? 'translateY(-50%)' 
-                : undefined
+                ? 'translateY(-50%) scale(1)' 
+                : 'scale(1)',
+            transformOrigin: 'center'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = orientation === 'horizontal' 
+              ? 'translateX(-50%) scale(1.5)' 
+              : orientation === 'vertical' 
+                ? 'translateY(-50%) scale(1.5)' 
+                : 'scale(1.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = orientation === 'horizontal' 
+              ? 'translateX(-50%) scale(1)' 
+              : orientation === 'vertical' 
+                ? 'translateY(-50%) scale(1)' 
+                : 'scale(1)';
           }}
           onClick={() => handleClick(event)}
         />
