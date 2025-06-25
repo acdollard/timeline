@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
 import type { Session } from '@supabase/supabase-js';
 
 interface NavbarProps {
@@ -16,7 +15,7 @@ const Navbar = ({ initialSession }: NavbarProps) => {
   return (
     <nav className="flex flex-row justify-between items-center py-4 w-full px-6">
       <a href="/" className="text-white text-xl font-bold">
-        Timeline
+        <img src="/timeline-logo.svg" alt="Timeline Logo" className="h-10"/>
       </a>
       <ul className="flex flex-row justify-between items-center text-white gap-4">
         <li><a href="/" className="hover:text-primary transition-colors">Home</a></li>
