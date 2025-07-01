@@ -28,7 +28,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
 
   const tooltipClasses = orientation === 'horizontal' 
     ? "absolute md:-translate-x-1/2 md:-top-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap"
-    : "absolute -translate-y-1/2 -right-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap";
+    : "absolute rotate-180 -translate-x-32 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap";
 
   return (
     <>

@@ -24,7 +24,7 @@ const Navbar = ({ initialSession }: NavbarProps) => {
   return (
     <nav className="flex flex-row justify-between items-center py-4 w-full px-6 relative">
       <a href="/" className="text-white text-xl font-bold">
-        <img src="/timeline-logo.svg" alt="Timeline Logo" className="h-10"/>
+        <img src="/logo.svg" alt="Timeline Logo" className="h-10"/>
       </a>
       
       {/* Desktop Menu */}

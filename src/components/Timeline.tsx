@@ -118,7 +118,7 @@ const Timeline = ({
         </div>
 
         {/* Mobile Timeline */}
-        <div id="mobile-timeline-line" className="md:hidden w-1 bg-white flex flex-col relative h-[150vh] mx-10">
+        <div className="md:hidden w-1 bg-white flex flex-col relative h-[150vh] mx-10">
         {Array.from({ length: totalYears }).map((_, index) => {
             const year = birthDate.getFullYear() + index + 1;
             return (
