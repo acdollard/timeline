@@ -15,14 +15,14 @@ import { Image } from "astro:assets";
         Share your <span class="text-primary">Story.</span>
       </h1>
       <h1
-        class="font-bold text-left text-4xl md:text-5xl mb-4 animate-slideInLeft delay-100"
+        class="font-bold text-left text-4xl md:text-5xl mb-4 animate-slideInLeft delay-300"
       >
         Preserve your <span class="text-secondary-blue animate-ripple"
           >Memories.</span
         >
       </h1>
       <h1
-        class="font-bold text-left text-4xl md:text-5xl mb-4 animate-slideInLeft delay-200"
+        class="font-bold text-left text-4xl md:text-5xl mb-4 animate-slideInLeft delay-1000"
       >
         Build Your <span class="text-secondary-purple">Timeline.</span>
       </h1>
@@ -49,63 +49,63 @@ import { Image } from "astro:assets";
         class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 w-full max-w-md"
       >
         <Image
-          src="/IMG_6499 1.png"
+          src="/lt-casey.png"
+          alt="Timeline memory"
+          width={200}
+          height={128}
+          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200 home-image bg-amber-600"
+        />
+        <Image
+          src="/kid-with-hose.png"
           alt="Timeline memory"
           width={200}
           height={128}
           class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
         />
         <Image
-          src="/phil-goodwin-TxP44VIqlA8-unsplash 2.png"
+          src="/black-and-white-mom.png"
           alt="Timeline memory"
           width={200}
           height={128}
           class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
         />
         <Image
-          src="/library-of-congress-M028XavHgxM-unsplash 2.png"
+          src="/family.png"
           alt="Timeline memory"
           width={200}
           height={128}
           class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
         />
         <Image
-          src="/woman-mother-or-children-in-park-for-photography-2025-04-06-08-59-57-utc 2.png"
+          src="/proposal.png"
           alt="Timeline memory"
           width={200}
           height={128}
           class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
         />
         <Image
-          src="/full-length-shot-of-a-handsome-young-man-proposing-2025-04-06-02-26-11-utc 1.png"
+          src="/wedding.png"
           alt="Timeline memory"
           width={200}
           height={128}
           class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
         />
         <Image
-          src="/loving-senior-couple-getting-married-at-church-alt-2025-03-09-16-14-59-utc 1.png"
+          src="/henry-ronald-ben.png"
           alt="Timeline memory"
           width={200}
           height={128}
           class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
         />
         <Image
-          src="/IMG_3008 1.png"
+          src="/graduation.png"
           alt="Timeline memory"
           width={200}
           height={128}
           class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
         />
         <Image
-          src="/young-people-at-graduation-ceremony-2025-03-05-09-29-18-utc 1.png"
-          alt="Timeline memory"
-          width={200}
-          height={128}
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
-        />
-        <Image
-          src="/first-day-of-asian-newborn-baby-sleep-in-incubator-2024-11-26-02-09-14-utc 1.png"
+          src="/newborn.png"
           alt="Timeline memory"
           width={200}
           height={128}
@@ -115,3 +115,14 @@ import { Image } from "astro:assets";
     </div>
   </div>
 </Layout>
+
+<style>
+  .home-image {
+    background-color: #1c9dba;
+    background-blend-mode: screen;
+
+    &:hover {
+      background-color: none;
+    }
+  }
+</style>
