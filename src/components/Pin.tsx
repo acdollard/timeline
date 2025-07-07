@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { getPinColor } from '../utils/pinColors';
 import type { TimelineEvent } from '../types/events';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+
 
 interface PinProps {
   event: TimelineEvent;
@@ -16,6 +20,15 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
     month: 'long',
     day: 'numeric'
   });
+
+  useGSAP(() => {
+    gsap.to('.shaft', {
+      height: 100,
+      duration: 0.5,
+      stagger: 0.1,
+      ease: 'power2.inOut',
+    })
+  })
 
   // Get color from event_types if available, otherwise fall back to legacy type
   const getEventColor = () => {
@@ -80,9 +93,9 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
           </div>
         )}
         {!isBirth && (
-          <div className={`${
+          <div className={`shaft ${
             orientation === 'horizontal' 
-              ? 'h-20 w-0.5 bg-white mx-auto' 
+              ? 'h-0 w-0.5 bg-white mx-auto' 
               : 'w-20 h-0.5 bg-white my-auto'
           }`} />
         )}

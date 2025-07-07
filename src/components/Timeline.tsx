@@ -79,7 +79,7 @@ const Timeline = ({
       )}
       <div className="timeline-container flex flex-col h-auto">
         {/* Desktop Timeline */}
-        <div id="timeline-line" className="md:block bg-white h-1 flex flex-row relative hidden">
+        <div id="timeline-line" className="bg-white h-1 hidden md:flex flex-row relative">
           {eventsWithPosition.map((item) => (
             <div 
               key={item.id}
