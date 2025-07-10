@@ -18,8 +18,16 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onUpdat
     day: 'numeric'
   });
 
+  const getPinColor = (): string => {
+    if (event.event_types?.color) {
+      return event.event_types.color;
+    } else {
+      return 'f2f2f2';
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn">
       <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 md:mx-auto relative">
         <button
           onClick={onClose}
@@ -31,7 +39,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onUpdat
         </button>
         
         <div className="flex items-center space-x-3 mb-4">
-          <div className={`w-4 h-4 rounded-full ${getPinColor(event.type || 'birth')}`} />
+          <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: getPinColor() }} />
           <h2 className="text-xl font-semibold text-white">{event.name}</h2>
         </div>
         

@@ -247,11 +247,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
           onFilterChange={handleFilterChange}
           onAddClick={() => setShowFormModal(true)}
         />
-        <EventFormModal
-          isOpen={showFormModal}
-          onClose={() => setShowFormModal(false)}
-          onSubmit={handleCreateEvent}
-        />
+
       </div>
     </>
   );
