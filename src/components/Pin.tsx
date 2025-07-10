@@ -24,11 +24,11 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
   useGSAP(() => {
     gsap.to('.shaft', {
       height: 100,
-      duration: 0.5,
+      duration: 0.2,
       stagger: 0.1,
       ease: 'power2.inOut',
     })
-  })
+  }, [event])
 
   // Get color from event_types if available, otherwise fall back to legacy type
   const getEventColor = () => {
