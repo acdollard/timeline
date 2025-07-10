@@ -67,3 +67,10 @@ CREATE TRIGGER update_event_types_updated_at
   BEFORE UPDATE ON event_types
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column(); 
+
+
+  -- Add new event types with easily discernable colors
+INSERT INTO event_types (name, display_name, color, icon, is_default, is_active) VALUES
+  ('medical-dental', 'Medical/Dental', '#DC2626', 'stethoscope', true, true),
+  ('military', 'Military', '#059669', 'shield', true, true),
+  ('milestones', 'Milestones', '#7C3AED', 'trophy', true, true);
