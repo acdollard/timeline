@@ -1,7 +1,5 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import collage from "../assets/collage.png";
-import { Image } from "astro:assets";
 ---
 
 <Layout>
@@ -9,21 +7,13 @@ import { Image } from "astro:assets";
     class="mx-auto flex flex-col md:flex-row py-10 max-w-7xl h-[80vh] text-white px-6"
   >
     <div class="w-full md:w-1/2 flex flex-col items-start justify-center">
-      <h1
-        class="font-bold text-left text-4xl md:text-5xl mb-4 animate-slideInLeft"
-      >
+      <h1 class="font-bold text-left text-4xl md:text-5xl mb-4 slide-in-left-1">
         Share your <span class="text-primary">Story.</span>
       </h1>
-      <h1
-        class="font-bold text-left text-4xl md:text-5xl mb-4 animate-slideInLeft delay-300"
-      >
-        Preserve your <span class="text-secondary-blue animate-ripple"
-          >Memories.</span
-        >
+      <h1 class="font-bold text-left text-4xl md:text-5xl mb-4 slide-in-left-2">
+        Preserve your <span class="text-secondary-blue">Memories.</span>
       </h1>
-      <h1
-        class="font-bold text-left text-4xl md:text-5xl mb-4 animate-slideInLeft delay-1000"
-      >
+      <h1 class="font-bold text-left text-4xl md:text-5xl mb-4 slide-in-left-3">
         Build Your <span class="text-secondary-purple">Timeline.</span>
       </h1>
 
@@ -45,66 +35,188 @@ import { Image } from "astro:assets";
       </div>
     </div>
     <div class="w-full md:w-1/2 flex items-center justify-center pt-10">
-      <div
-        class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 w-full max-w-md"
-      >
-        <img
-          src="/lt-casey.png"
-          alt="Timeline memory"
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200 home-image bg-amber-600"
-        />
-        <img
-          src="/kid-with-hose.png"
-          alt="Timeline memory"
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
-        />
-        <img
-          src="/black-and-white-mom.png"
-          alt="Timeline memory"
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
-        />
-        <img
-          src="/family.png"
-          alt="Timeline memory"
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
-        />
-        <img
-          src="/proposal.png"
-          alt="Timeline memory"
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
-        />
-        <img
-          src="/wedding.png"
-          alt="Timeline memory"
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
-        />
-        <img
-          src="/henry-ronald-ben.png"
-          alt="Timeline memory"
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
-        />
-        <img
-          src="/graduation.png"
-          alt="Timeline memory"
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
-        />
-        <img
-          src="/newborn.png"
-          alt="Timeline memory"
-          class="w-full h-24 md:h-32 object-cover rounded-lg shadow-lg hover:scale-105 transition-transform duration-200"
-        />
+      <div class="relative">
+        <div
+          class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 w-full max-w-md relative z-10"
+        >
+          <img
+            src="/lt-casey.png"
+            alt="Timeline memory"
+            class="memory-image w-full h-24 md:h-32 object-cover rounded-lg shadow-lg transition-all duration-500 ease-out filter blur-sm opacity-70 hover:blur-none hover:opacity-100 hover:scale-125 hover:z-20 relative"
+          />
+          <img
+            src="/kid-with-hose.png"
+            alt="Timeline memory"
+            class="memory-image w-full h-24 md:h-32 object-cover rounded-lg shadow-lg transition-all duration-500 ease-out filter blur-sm opacity-70 hover:blur-none hover:opacity-100 hover:scale-125 hover:z-20 relative"
+          />
+          <img
+            src="/black-and-white-mom.png"
+            alt="Timeline memory"
+            class="memory-image w-full h-24 md:h-32 object-cover rounded-lg shadow-lg transition-all duration-500 ease-out filter blur-sm opacity-70 hover:blur-none hover:opacity-100 hover:scale-125 hover:z-20 relative"
+          />
+          <img
+            src="/family.png"
+            alt="Timeline memory"
+            class="memory-image w-full h-24 md:h-32 object-cover rounded-lg shadow-lg transition-all duration-500 ease-out filter blur-sm opacity-70 hover:blur-none hover:opacity-100 hover:scale-125 hover:z-20 relative"
+          />
+          <img
+            src="/proposal.png"
+            alt="Timeline memory"
+            class="memory-image w-full h-24 md:h-32 object-cover rounded-lg shadow-lg transition-all duration-500 ease-out filter blur-sm opacity-70 hover:blur-none hover:opacity-100 hover:scale-125 hover:z-20 relative"
+          />
+          <img
+            src="/wedding.png"
+            alt="Timeline memory"
+            class="memory-image w-full h-24 md:h-32 object-cover rounded-lg shadow-lg transition-all duration-500 ease-out filter blur-sm opacity-70 hover:blur-none hover:opacity-100 hover:scale-125 hover:z-20 relative"
+          />
+          <img
+            src="/henry-ronald-ben.png"
+            alt="Timeline memory"
+            class="memory-image w-full h-24 md:h-32 object-cover rounded-lg shadow-lg transition-all duration-500 ease-out filter blur-sm opacity-70 hover:blur-none hover:opacity-100 hover:scale-125 hover:z-20 relative"
+          />
+          <img
+            src="/graduation.png"
+            alt="Timeline memory"
+            class="memory-image w-full h-24 md:h-32 object-cover rounded-lg shadow-lg transition-all duration-500 ease-out filter blur-sm opacity-70 hover:blur-none hover:opacity-100 hover:scale-125 hover:z-20 relative"
+          />
+          <img
+            src="/newborn.png"
+            alt="Timeline memory"
+            class="memory-image w-full h-24 md:h-32 object-cover rounded-lg shadow-lg transition-all duration-500 ease-out filter blur-sm opacity-70 hover:blur-none hover:opacity-100 hover:scale-125 hover:z-20 relative"
+          />
+        </div>
+
+        <!-- Fog Overlay -->
+        <div
+          class="fog-layer absolute inset-0 bg-gradient-to-br from-blue-900/30 via-purple-800/40 to-indigo-900/30 rounded-lg pointer-events-none z-5"
+        >
+        </div>
+
+        <!-- Additional atmospheric fog layers -->
+        <div
+          class="fog-layer absolute inset-0 bg-gradient-to-t from-blue-600/20 via-transparent to-purple-600/20 rounded-lg pointer-events-none z-5"
+          style="animation-delay: -2s;"
+        >
+        </div>
+        <div
+          class="fog-layer absolute inset-0 bg-gradient-to-r from-indigo-500/15 via-transparent to-blue-500/15 rounded-lg pointer-events-none z-5"
+          style="animation-delay: -4s;"
+        >
+        </div>
       </div>
     </div>
   </div>
 </Layout>
 
 <style>
-  .home-image {
-    background-color: #1c9dba;
-    background-blend-mode: screen;
+  /* Atmospheric fog effect */
+  .memory-fog {
+    background: linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.3) 0%,
+      rgba(147, 51, 234, 0.4) 50%,
+      rgba(79, 70, 229, 0.3) 100%
+    );
+    backdrop-filter: blur(2px);
+  }
 
-    &:hover {
-      background-color: none;
+  /* Enhanced hover effects for memory clarity */
+  .memory-image {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .memory-image:hover {
+    transform: scale(1.25);
+    filter: blur(0);
+    opacity: 1;
+    z-index: 20;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .memory-image.active {
+    filter: blur(0);
+    opacity: 1;
+    transform: scale(1.25);
+    z-index: 20;
+    transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Subtle animation for the fog layers */
+  @keyframes fogDrift {
+    0%,
+    100% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 0.5;
     }
   }
+
+  @keyframes slideInLeft {
+    0% {
+      opacity: 0;
+      transform: translateX(-100%);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .fog-layer {
+    animation: fogDrift 8s ease-in-out infinite;
+  }
+
+  .slide-in-left-1 {
+    opacity: 0;
+    transform: translateX(-100%);
+    animation: 1.2s slideInLeft 0.2s ease-in-out forwards;
+  }
+
+  .slide-in-left-2 {
+    opacity: 0;
+    transform: translateX(-100%);
+    animation: 1.2s slideInLeft 0.5s ease-in-out forwards;
+  }
+
+  .slide-in-left-3 {
+    opacity: 0;
+    transform: translateX(-100%);
+    animation: 1.2s slideInLeft 0.7s ease-in-out forwards;
+  }
 </style>
+
+<script>
+  /* Track current active image index */
+  let currentActiveIndex = 8;
+  let rotationInterval: NodeJS.Timeout;
+  const images = document.querySelectorAll(".memory-image");
+
+  // Start automatic rotation
+  function startRotation() {
+    rotationInterval = setInterval(() => {
+      // Remove active class from current image
+      images[currentActiveIndex].classList.remove("active");
+
+      // Move to next image
+      currentActiveIndex = (currentActiveIndex + 1) % images.length;
+
+      // Add active class to new image
+      images[currentActiveIndex].classList.add("active");
+    }, 2000); // Change every 2 seconds
+  }
+
+  // Pause rotation on hover
+  images.forEach((img) => {
+    img.addEventListener("mouseenter", () => {
+      clearInterval(rotationInterval);
+    });
+
+    img.addEventListener("mouseleave", () => {
+      startRotation();
+    });
+  });
+
+  // Start the rotation
+  startRotation();
+</script>
