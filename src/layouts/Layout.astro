@@ -1,14 +1,20 @@
 ---
 import "../styles/global.css";
 import Navbar from "../components/Navbar";
+import BackButton from "../components/BackButton";
 import { supabase } from "../lib/supabase";
 
 interface Props {
   title?: string;
   requireAuth?: boolean;
+  showBackButton?: boolean;
 }
 
-const { title = "Timeline", requireAuth = false } = Astro.props;
+const {
+  title = "Timeline",
+  requireAuth = false,
+  showBackButton = true,
+} = Astro.props;
 
 const accessToken = Astro.cookies.get("sb-access-token");
 const refreshToken = Astro.cookies.get("sb-refresh-token");
@@ -42,6 +48,7 @@ if (requireAuth && !session) {
   </head>
   <body class="bg-gray-900 min-h-screen">
     <Navbar client:load initialSession={session} />
+    {showBackButton && <BackButton client:load />}
     <main>
       <slot />
     </main>
