@@ -8,28 +8,35 @@ import Layout from "../layouts/Layout.astro";
   >
     <div class="w-full md:w-1/2 flex flex-col items-start justify-center">
       <h1 class="font-bold text-left text-4xl md:text-5xl mb-4 slide-in-left-1">
-        Share your <span class="text-primary">Story.</span>
+        Share your <span class="text-secondary-blue">Story.</span>
       </h1>
       <h1 class="font-bold text-left text-4xl md:text-5xl mb-4 slide-in-left-2">
-        Preserve your <span class="text-secondary-blue">Memories.</span>
+        Preserve your <span class="text-secondary-purple">Memories.</span>
       </h1>
       <h1 class="font-bold text-left text-4xl md:text-5xl mb-4 slide-in-left-3">
-        Build Your <span class="text-secondary-purple">Timeline.</span>
+        Build Your <span class="text-primary">Timeline.</span>
       </h1>
 
       <div class="flex flex-row gap-4 mt-4">
-        <a href="/summary">
-          <button
-            class="bg-gradient-to-b from-primary to-orange-600 hover:from-orange-600 hover:to-primary text-white px-4 py-2 rounded-md cursor-pointer"
-          >
-            Go To My Timeline
-          </button>
-        </a>
-        <a href="/about">
+        <a href="/ourStory">
           <button
             class="bg-gradient-to-b from-cyan-700 to-cyan-500 hover:from-cyan-500 hover:to-cyan-700 text-white px-4 py-2 rounded-md cursor-pointer"
           >
             Read Our Story
+          </button>
+        </a>
+        <a href="/about">
+          <button
+            class="bg-gradient-to-b from-purple-700 to-purple-500 hover:from-purple-500 hover:to-purple-700 text-white px-4 py-2 rounded-md cursor-pointer"
+          >
+            About Us
+          </button>
+        </a>
+        <a href="/summary">
+          <button
+            class="bg-gradient-to-b from-primary to-orange-600 hover:from-orange-600 hover:to-primary text-white px-4 py-2 rounded-md cursor-pointer"
+          >
+            Go To Timeline
           </button>
         </a>
       </div>
@@ -199,11 +206,11 @@ import Layout from "../layouts/Layout.astro";
       images[currentActiveIndex].classList.remove("active");
 
       // Move to next image
-      currentActiveIndex = (currentActiveIndex + 1) % images.length;
+      currentActiveIndex = Math.floor(Math.random() * images.length);
 
       // Add active class to new image
       images[currentActiveIndex].classList.add("active");
-    }, 2000); // Change every 2 seconds
+    }, 3500); // Change every 2 seconds
   }
 
   // Pause rotation on hover

@@ -1,0 +1,31 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <main class="max-w-4xl mx-auto px-4 py-12">
+    <article class="space-y-8">
+      <header class="space-y-4">
+        <h1 class="text-4xl md:text-5xl font-bold text-white">
+          Our <span
+            class="text-primary animate-[ripple_2s_ease-in-out_infinite]"
+            >Story</span
+          >
+        </h1>
+        <p class="text-lg text-gray-300 max-w-3xl">
+          *personal testimonials go here*
+        </p>
+      </header>
+    </article>
+
+    <nav class="pt-8">
+      <a
+        href="/summary"
+        class="inline-block bg-gradient-to-r from-primary to-orange-600 hover:from-orange-600 hover:to-primary text-white px-6 py-3 rounded-md font-medium transition-all duration-300"
+        aria-label="Go to your timeline"
+      >
+        Start Your Timeline
+      </a>
+    </nav>
+  </main>
+</Layout>

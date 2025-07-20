@@ -228,7 +228,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   return (
     <>
       <div className="w-full flex flex-col justify-center relative align-center sm:mb-24 md:mb-0">
-        <div className="my-auto">
+        <div className="mb-36">
           <Timeline 
             events={filteredEvents} 
             setShowFormModal={setShowFormModal} 

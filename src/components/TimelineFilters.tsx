@@ -11,7 +11,7 @@ interface TimelineFiltersProps {
 const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) => {
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
