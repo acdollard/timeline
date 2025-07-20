@@ -195,7 +195,7 @@ import Layout from "../layouts/Layout.astro";
 
 <script>
   /* Track current active image index */
-  let currentActiveIndex = 8;
+  let currentActiveIndex = 1;
   let rotationInterval: NodeJS.Timeout;
   const images = document.querySelectorAll(".memory-image");
 
@@ -210,7 +210,7 @@ import Layout from "../layouts/Layout.astro";
 
       // Add active class to new image
       images[currentActiveIndex].classList.add("active");
-    }, 3500); // Change every 2 seconds
+    }, 3500); // Change every 3.5 seconds
   }
 
   // Pause rotation on hover
