@@ -11,9 +11,10 @@ interface PinProps {
   isBirth?: boolean;
   handleClick: (event: TimelineEvent) => void;
   orientation?: 'horizontal' | 'vertical';
+  index: number | 0;
 }
 
-const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientation = 'horizontal' }) => {
+const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientation = 'horizontal', index }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const formattedDate = new Date(event.date).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -23,7 +24,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
 
   useGSAP(() => {
     gsap.to('.shaft', {
-      height: 100,
+      height: 90,
       duration: 0.2,
       stagger: 0.1,
       ease: 'power2.inOut',
@@ -85,7 +86,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
         />
         {showTooltip && (
           <div 
-            className={tooltipClasses}
+            className={`${tooltipClasses} ${index !== 0 && index % 2 === 0 ? "rotate-180 origin-bottom -translate-y-full" : ""}`}
             style={{ pointerEvents: 'none' }}
           >
             <div className="font-semibold">{event.name}</div>

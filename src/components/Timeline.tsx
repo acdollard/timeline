@@ -80,17 +80,18 @@ const Timeline = ({
       <div className="timeline-container flex flex-col h-auto">
         {/* Desktop Timeline */}
         <div id="timeline-line" className="bg-white h-1 hidden md:flex flex-row relative">
-          {eventsWithPosition.map((item) => (
+          {eventsWithPosition.map((item, index) => (
             <div 
               key={item.id}
               className={`flex flex-col h-auto absolute ${
                 isBirthEvent(item)
                   ? "-translate-y-2.5"
                   : "-translate-y-full"
-              }`}
+              }
+              ${index !== 0 && index % 2 === 0 ? "rotate-180 origin-bottom" : ""}`}
               style={{ left: `${item.position}%`}}
             >
-              <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} orientation="horizontal"/>
+              <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} orientation="horizontal" index={index} />
             </div>
           ))}
           {Array.from({ length: totalYears }).map((_, index) => {
@@ -142,7 +143,7 @@ const Timeline = ({
               </React.Fragment>
             );
           })}
-          {eventsWithPosition.map((item) => (
+          {eventsWithPosition.map((item, index) => (
             <div 
               key={item.id}
               className={`flex flex-row h-auto absolute ${
@@ -152,7 +153,7 @@ const Timeline = ({
               }`}
               style={{ top: `${item.position}%`}}
             >
-              <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} orientation="vertical"/>
+              <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} orientation="vertical" index={index} />
             </div>
           ))}
 
