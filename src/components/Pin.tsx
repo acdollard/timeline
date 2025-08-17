@@ -10,11 +10,11 @@ interface PinProps {
   event: TimelineEvent;
   isBirth?: boolean;
   handleClick: (event: TimelineEvent) => void;
-  orientation?: 'horizontal' | 'vertical';
+  isMobile?: boolean;
   index: number | 0;
 }
 
-const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientation = 'horizontal', index }) => {
+const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile, index }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const formattedDate = useMemo(() => {
     return new Date(event.date).toLocaleDateString('en-US', {
@@ -26,24 +26,26 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
 
   useGSAP(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('Pin orientation:', orientation);
+      console.log('Pin timeline type:', isMobile ? 'mobile (vertical)' : 'desktop (horizontal)');
     }
-    if( window.innerWidth > 768 ) {
-    gsap.to('.shaft', {
-      height: 90,
-      duration: 0.2,
-      stagger: 0.1,
-      ease: 'power2.inOut',
-      })
-    } else if ( window.innerWidth < 768 ) {
+    if (!isMobile) {
       gsap.to('.shaft', {
+        height: 90,
+        width: 0.5,
+        duration: 0.2,
+        stagger: 0.1,
+        ease: 'power2.inOut',
+      })
+    } else {
+      gsap.to('.shaft', {
+        height: 0.5,
         width: 90,
         duration: 0.2,
         stagger: 0.1,
         ease: 'power2.inOut',
       })
-    }
-  }, [orientation])
+    } 
+  }, [isMobile])
 
   // Get color from event_types if available, otherwise fall back to legacy type
   const getEventColor = () => {
@@ -54,7 +56,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
     return getPinColor(event.type || 'birth');
   };
 
-  const tooltipClasses = orientation === 'horizontal' 
+  const tooltipClasses = !isMobile 
     ? "absolute md:-translate-x-1/2 md:-top-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap"
     : "absolute rotate-180 -translate-x-32 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap";
 
@@ -73,26 +75,26 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
           className="event rounded-full transition-all duration-200 absolute h-6 w-6 cursor-pointer"
           style={{ 
             backgroundColor: getEventColor(),
-            left: orientation === 'horizontal' ? '50%' : undefined,
-            top: orientation === 'vertical' ? '50%' : undefined,
-            transform: orientation === 'horizontal' 
+            left: !isMobile ? '50%' : undefined,
+            top: isMobile ? '50%' : undefined,
+            transform: !isMobile 
               ? 'translateX(-50%) scale(1)' 
-              : orientation === 'vertical' 
+              : isMobile 
                 ? 'translateY(-50%) scale(1)' 
                 : 'scale(1)',
             transformOrigin: 'center'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = orientation === 'horizontal' 
+            e.currentTarget.style.transform = !isMobile 
               ? 'translateX(-50%) scale(1.5)' 
-              : orientation === 'vertical' 
+              : isMobile 
                 ? 'translateY(-50%) scale(1.5)' 
                 : 'scale(1.5)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = orientation === 'horizontal' 
+            e.currentTarget.style.transform = !isMobile 
               ? 'translateX(-50%) scale(1)' 
-              : orientation === 'vertical' 
+              : isMobile 
                 ? 'translateY(-50%) scale(1)' 
                 : 'scale(1)';
           }}
@@ -109,7 +111,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
         )}
         {!isBirth && (
           <div className={`shaft ${
-            orientation === 'horizontal' 
+            !isMobile 
               ? 'h-0 w-0.5 bg-white mx-auto' 
               : 'w-20 h-0.5 bg-white my-auto'
           }`} />
