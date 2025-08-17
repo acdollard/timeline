@@ -28,13 +28,21 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
     if (process.env.NODE_ENV === 'development') {
       console.log('Pin orientation:', orientation);
     }
-
+    if( window.innerWidth > 768 ) {
     gsap.to('.shaft', {
       height: 90,
       duration: 0.2,
       stagger: 0.1,
       ease: 'power2.inOut',
-    })
+      })
+    } else if ( window.innerWidth < 768 ) {
+      gsap.to('.shaft', {
+        width: 90,
+        duration: 0.2,
+        stagger: 0.1,
+        ease: 'power2.inOut',
+      })
+    }
   }, [orientation])
 
   // Get color from event_types if available, otherwise fall back to legacy type
