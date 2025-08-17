@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Pin from './Pin';
 import EventModal from './EventModal';
 import EventFormModal from './EventFormModal';
@@ -29,20 +29,32 @@ const Timeline = ({
   const [showUpdateForm, setShowUpdateForm] = useState(false);
 
   // Find the birth date and calculate the total timeline span
-  const birthEvent = events.find(item => item.event_types?.name === "birth" || item.type === "birth");
+  const birthEvent = useMemo(() => {
+    return events.find(item => item.event_types?.name === "birth" || item.type === "birth");
+  }, [events]);
 
-  const birthDate = new Date(birthEvent?.date || '');
-  const today = new Date();
-  const totalDays = Math.ceil((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
-  const totalYears = Math.ceil(totalDays / 365);
+  const birthDate = useMemo(() => {
+    return new Date(birthEvent?.date || '');
+  }, [birthEvent?.date]);
+
+  const totalDays = useMemo(() => {
+    const today = new Date();
+    return Math.ceil((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
+  }, [birthDate]);
+
+  const totalYears = useMemo(() => {
+    return Math.ceil(totalDays / 365);
+  }, [totalDays]);
 
   // Calculate position for each event
-  const eventsWithPosition = events.map(item => {
-    const eventDate = new Date(item.date);
-    const daysSinceBirth = Math.ceil((eventDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
-    const position = (daysSinceBirth / totalDays) * 100;
-    return { ...item, position };
-  });
+  const eventsWithPosition = useMemo(() => {
+    return events.map(item => {
+      const eventDate = new Date(item.date);
+      const daysSinceBirth = Math.ceil((eventDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
+      const position = (daysSinceBirth / totalDays) * 100;
+      return { ...item, position };
+    });
+  }, [events, birthDate, totalDays]);
 
   const handlePinClick = (event: TimelineEvent) => {
     setSelectedEvent(event);
@@ -66,9 +78,11 @@ const Timeline = ({
   };
 
   // Helper function to check if an event is a birth event
-  const isBirthEvent = (event: TimelineEvent) => {
-    return event.event_types?.name === "birth" || event.type === "birth";
-  };
+  const isBirthEvent = useMemo(() => {
+    return (event: TimelineEvent) => {
+      return event.event_types?.name === "birth" || event.type === "birth";
+    };
+  }, []);
 
   return (
     <>

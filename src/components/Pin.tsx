@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { getPinColor } from '../utils/pinColors';
 import type { TimelineEvent } from '../types/events';
 import gsap from 'gsap';
@@ -16,20 +16,26 @@ interface PinProps {
 
 const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientation = 'horizontal', index }) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const formattedDate = new Date(event.date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  const formattedDate = useMemo(() => {
+    return new Date(event.date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }, [event.date]);
 
   useGSAP(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Pin orientation:', orientation);
+    }
+
     gsap.to('.shaft', {
       height: 90,
       duration: 0.2,
       stagger: 0.1,
       ease: 'power2.inOut',
     })
-  }, [event])
+  }, [orientation])
 
   // Get color from event_types if available, otherwise fall back to legacy type
   const getEventColor = () => {
@@ -89,7 +95,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, orientat
             className={`${tooltipClasses} ${index !== 0 && index % 2 === 0 ? "rotate-180 origin-bottom -translate-y-full" : ""}`}
             style={{ pointerEvents: 'none' }}
           >
-            <div className="font-semibold">{event.name}</div>
+            <p className="font-semibold">{event.name}</p>
             <div className="text-gray-300">{formattedDate}</div>
           </div>
         )}

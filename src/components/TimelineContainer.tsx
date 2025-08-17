@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Timeline from './Timeline';
 import TimelineFilters from './TimelineFilters';
 import type { TimelineEvent } from '../types/events';
@@ -14,7 +14,6 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [userEvents, setUserEvents] = useState<TimelineEvent[]>(events);
-  const [filteredEvents, setFilteredEvents] = useState<TimelineEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +42,6 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       if (error) throw error;
       setUserEvents(data || []);
       setError(null);
-      console.log(data);
     } catch (err) {
       console.error('Failed to fetch events:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch events');
@@ -57,10 +55,9 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     fetchEvents();
   }, [sessionId]);
 
-  // Update filtered events when userEvents or selectedTypeIds change
-  useEffect(() => {
-    console.log("Updating filtered events");
-    const filtered = userEvents.filter(event => {
+  // Memoize filtered events to prevent unnecessary recalculations
+  const filteredEvents = useMemo(() => {
+    return userEvents.filter(event => {
       // Always include birth events
       if (event.event_types?.name === 'birth' || event.type === 'birth') {
         return true;
@@ -74,7 +71,6 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       // If event types are selected, only show events that match selected type IDs
       return selectedTypeIds.includes(event.event_type_id);
     });
-    setFilteredEvents(filtered);
   }, [selectedTypeIds, userEvents]);
 
   // Update heading when selected event type changes
