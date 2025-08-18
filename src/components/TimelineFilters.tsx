@@ -47,6 +47,7 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
   }, []);
 
   const handleTypeToggle = (typeId: string) => {
+    console.log('handleTypeToggle', typeId);
     // If this type is already selected, deselect it (show all)
     // If this type is not selected, select only this type (show only this type)
     const newSelectedTypeIds = selectedTypeIds.includes(typeId)

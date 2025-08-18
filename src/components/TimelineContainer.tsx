@@ -18,6 +18,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventType, setSelectedEventType] = useState<{ id: string; displayName: string } | null>(null);
+  const [eventTypes, setEventTypes] = useState<{ id: string; displayName: string }[]>([]);
 
   const fetchEvents = async () => {
     if (!sessionId) return;
@@ -38,9 +39,14 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         `)
         .eq("user_id", sessionId)
         .order("date", { ascending: true });
+      
+      const { data: eventTypes, error: eventTypesError } = await supabase
+        .from("event_types")
+        .select("*");
 
       if (error) throw error;
       setUserEvents(data || []);
+      setEventTypes(eventTypes || []);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch events:', err);
@@ -176,10 +182,9 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       setSelectedEventType(null);
     } else {
       // Find the event type details
-      const eventType = userEvents.find(event => event.event_type_id === selectedTypes[0])?.event_types;
+      const eventType = eventTypes.find(event => event.id === selectedTypes[0]);
       if (eventType) {
         const selectedType = { id: selectedTypes[0], displayName: (eventType as any).display_name };
-        console.log(selectedType);
         setSelectedEventType(selectedType);
       }
     }
