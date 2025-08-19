@@ -26,7 +26,6 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile
 
   useGSAP(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('Pin timeline type:', isMobile ? 'mobile (vertical)' : 'desktop (horizontal)');
     }
     if (!isMobile) {
       gsap.to('.shaft', {

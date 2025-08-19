@@ -40,9 +40,11 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         .eq("user_id", sessionId)
         .order("date", { ascending: true });
       
-      const { data: eventTypes, error: eventTypesError } = await supabase
-        .from("event_types")
-        .select("*");
+      const response = await fetch('/api/event-types');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch event types: ${response.statusText}`);
+      }
+      const eventTypes = await response.json();
 
       if (error) throw error;
       setUserEvents(data || []);
@@ -184,7 +186,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       // Find the event type details
       const eventType = eventTypes.find(event => event.id === selectedTypes[0]);
       if (eventType) {
-        const selectedType = { id: selectedTypes[0], displayName: (eventType as any).display_name };
+        const selectedType = { id: selectedTypes[0], displayName: (eventType as any).displayName };
         setSelectedEventType(selectedType);
       }
     }

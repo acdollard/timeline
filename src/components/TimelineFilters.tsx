@@ -27,7 +27,9 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
       }
       
       const data = await response.json();
-      setEventTypes(data);
+      const birthEvent = data.find((type: EventType) => type.name === 'birth');
+      const otherEvents = data.filter((type: EventType) => type.name !== 'birth');
+      setEventTypes([birthEvent, ...otherEvents]);
       
       // Initialize with no event types selected (show all by default)
       setSelectedTypeIds([]);
@@ -136,7 +138,7 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
           </div>
           <button
             onClick={onAddClick}
-            className="bg-primary hover:bg-white text-white hover:text-primary px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+            className="bg-gradient-to-b from-primary to-orange-600 hover:from-orange-600 hover:to-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
           >
             <svg
               className="w-5 h-5"
