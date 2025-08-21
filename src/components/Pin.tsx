@@ -44,7 +44,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile
         ease: 'power2.inOut',
       })
     } 
-  }, [isMobile])
+  }, [isMobile, event])
 
   // Get color from event_types if available, otherwise fall back to legacy type
   const getEventColor = () => {
