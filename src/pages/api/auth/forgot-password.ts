@@ -19,7 +19,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
     if (error) {
       logger.error('Password reset error', { 
-        email, 
+        email,  
         error: error.message 
       });
 
