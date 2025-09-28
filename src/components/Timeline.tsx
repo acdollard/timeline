@@ -68,12 +68,39 @@ const Timeline = ({
     return Math.ceil(totalDays / 365);
   }, [totalDays]);
 
+  // Calculate year marker positions based on actual days
+  const yearMarkers = useMemo(() => {
+    const markers = [];
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const birthYear = birthDate.getFullYear();
+    
+    
+    for (let year = birthYear + 1; year <= currentYear; year++) {
+      // Year markers should mark the START of each year (January 1st)
+      const yearStart = new Date(year, 0, 1); // January 1st of the year
+      
+      // Calculate days from birth to the START of this year
+      const daysToYearStart = Math.ceil((yearStart.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
+      const position = (daysToYearStart / totalDays) * 100;
+      
+      markers.push({
+        year,
+        position: Math.min(position, 100) // Cap at 100%
+      });
+    }
+    
+    return markers;
+  }, [birthDate, totalDays]);
+
   // Calculate position for each event
   const eventsWithPosition = useMemo(() => {
     return events.map(item => {
       const eventDate = new Date(item.date);
       const daysSinceBirth = Math.ceil((eventDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
       const position = (daysSinceBirth / totalDays) * 100;
+      
+      
       return { ...item, position };
     });
   }, [events, birthDate, totalDays]);
@@ -131,57 +158,51 @@ const Timeline = ({
                 <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} isMobile={false} index={index} />
               </div>
             ))}
-            {Array.from({ length: totalYears }).map((_, index) => {
-              const year = birthDate.getFullYear() + index + 1;
-              return (
-                <React.Fragment key={year}>
-                  <div
-                    className="w-0.5 h-4 bg-white absolute"
-                    style={{ left: `${((index + 1) / totalYears) * 100}%` }}
-                  />
-                  {index % 5 === 0 && (
-                    <div 
-                      className="absolute top-6 text-white text-xs bg-gray-900"
-                      style={{ 
-                        left: `${((index + 1) / totalYears) * 100}%`,
-                        transform: 'translateX(-50%)'
-                      }}
-                    >
-                      {year}
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
+            {yearMarkers.map((marker) => (
+              <React.Fragment key={marker.year}>
+                <div
+                  className="w-0.5 h-4 bg-white absolute"
+                  style={{ left: `${marker.position}%` }}
+                />
+                {marker.year % 5 === 0 && (
+                  <div 
+                    className="absolute top-6 text-white text-xs bg-gray-900"
+                    style={{ 
+                      left: `${marker.position}%`,
+                      transform: 'translateX(-50%)'
+                    }}
+                  >
+                    {marker.year}
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
           </div>
         )}
 
         {/* Mobile Timeline */}
         {isMobile && (
           <div className="w-1 bg-white flex flex-col relative h-[150vh] mx-10">
-            {Array.from({ length: totalYears }).map((_, index) => {
-              const year = birthDate.getFullYear() + index + 1;
-              return (
-                <React.Fragment key={year}>
-                  <div
-                    className="h-1 w-2 bg-white absolute translate"
-                    style={{ top: `${((index + 1) / totalYears) * 100}%` }}
-                  />
+            {yearMarkers.map((marker) => (
+              <React.Fragment key={marker.year}>
+                <div
+                  className="h-1 w-2 bg-white absolute translate"
+                  style={{ top: `${marker.position}%` }}
+                />
 
-                  {index % 5 === 0 && (
-                    <div 
-                      className="absolute left-6 text-white text-xs bg-gray-900 "
-                      style={{ 
-                        top: `${((index + 1) / totalYears) * 100}%`,
-                        transform: 'translateY(-50%) translateX(-210%)'
-                      }}
-                    >
-                      {year}
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                {marker.year % 5 === 0 && (
+                  <div 
+                    className="absolute left-6 text-white text-xs bg-gray-900 "
+                    style={{ 
+                      top: `${marker.position}%`,
+                      transform: 'translateY(-50%) translateX(-210%)'
+                    }}
+                  >
+                    {marker.year}
+                  </div>
+                )}
+              </React.Fragment>
+            ))}
             {eventsWithPosition.map((item, index) => (
               <div 
                 key={item.id}
