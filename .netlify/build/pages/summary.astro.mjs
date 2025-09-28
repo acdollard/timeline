@@ -1,6 +1,6 @@
 import { e as createComponent, f as createAstro, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_cefmmz3r.mjs';
 import 'kleur/colors';
-import { $ as $$Layout } from '../chunks/Layout_D9xI5dYe.mjs';
+import { $ as $$Layout } from '../chunks/Layout_iIFij7cA.mjs';
 import { s as supabase } from '../chunks/supabase_riZVRtFr.mjs';
 import { jsx, Fragment, jsxs } from 'react/jsx-runtime';
 import React, { useState, useMemo, useEffect } from 'react';
@@ -36,32 +36,29 @@ const Pin = ({ event, isBirth = false, handleClick, isMobile, index }) => {
     });
   }, [event.date]);
   useGSAP(() => {
-    if (process.env.NODE_ENV === "development") ;
     if (!isMobile) {
-      gsap.to(".shaft", {
+      gsap.to(`.shaft-${event.id}`, {
         height: 90,
         width: 0.5,
         duration: 0.2,
-        stagger: 0.1,
         ease: "power2.inOut"
       });
     } else {
-      gsap.to(".shaft", {
+      gsap.to(`.shaft-${event.id}`, {
         height: 0.5,
         width: 90,
         duration: 0.2,
-        stagger: 0.1,
         ease: "power2.inOut"
       });
     }
-  }, [isMobile, event]);
+  }, [isMobile, event.id]);
   const getEventColor = () => {
     if (event.event_types?.color) {
       return event.event_types.color;
     }
     return getPinColor(event.type || "birth");
   };
-  const tooltipClasses = !isMobile ? "absolute md:-translate-x-1/2 md:-top-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap" : "absolute rotate-180 -translate-x-32 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap";
+  const tooltipClasses = !isMobile ? "absolute md:-translate-x-1/2 md:-top-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap z-10" : "absolute left-12 top-1/2 -translate-y-1/2 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap z-10";
   return /* @__PURE__ */ jsx(Fragment, { children: /* @__PURE__ */ jsxs(
     "div",
     {
@@ -76,19 +73,19 @@ const Pin = ({ event, isBirth = false, handleClick, isMobile, index }) => {
         /* @__PURE__ */ jsx(
           "div",
           {
-            className: "event rounded-full transition-all duration-200 absolute h-6 w-6 cursor-pointer",
+            className: `event rounded-full transition-all duration-200 absolute cursor-pointer ${isMobile ? "h-8 w-8" : "h-6 w-6"}`,
             style: {
               backgroundColor: getEventColor(),
-              left: !isMobile ? "50%" : void 0,
+              left: !isMobile ? "50%" : "0px",
               top: isMobile ? "50%" : void 0,
-              transform: !isMobile ? "translateX(-50%) scale(1)" : isMobile ? "translateY(-50%) scale(1)" : "scale(1)",
+              transform: !isMobile ? "translateX(-50%) translateY(-50%) scale(1)" : "translateY(-50%) scale(1)",
               transformOrigin: "center"
             },
             onMouseEnter: (e) => {
-              e.currentTarget.style.transform = !isMobile ? "translateX(-50%) scale(1.5)" : isMobile ? "translateY(-50%) scale(1.5)" : "scale(1.5)";
+              e.currentTarget.style.transform = !isMobile ? "translateX(-50%) translateY(-50%) scale(1.5)" : "translateY(-50%) scale(1.3)";
             },
             onMouseLeave: (e) => {
-              e.currentTarget.style.transform = !isMobile ? "translateX(-50%) scale(1)" : isMobile ? "translateY(-50%) scale(1)" : "scale(1)";
+              e.currentTarget.style.transform = !isMobile ? "translateX(-50%) translateY(-50%) scale(1)" : "translateY(-50%) scale(1)";
             },
             onClick: () => handleClick(event)
           }
@@ -104,7 +101,7 @@ const Pin = ({ event, isBirth = false, handleClick, isMobile, index }) => {
             ]
           }
         ),
-        !isBirth && /* @__PURE__ */ jsx("div", { className: `shaft ${!isMobile ? "h-0 w-0.5 bg-white mx-auto" : "w-20 h-0.5 bg-white my-auto"}` })
+        !isBirth && /* @__PURE__ */ jsx("div", { className: `shaft shaft-${event.id} ${!isMobile ? "h-0 w-0.5 bg-white mx-auto" : "w-12 h-0.5 bg-white top-1/2"}` })
       ]
     }
   ) });
@@ -129,7 +126,7 @@ const EventModal = ({ event, isOpen, onClose, onUpdate }) => {
       "button",
       {
         onClick: onClose,
-        className: "absolute top-4 right-4 text-gray-400 hover:text-white",
+        className: "absolute top-4 right-4 text-gray-400 hover:text-white p-1",
         children: /* @__PURE__ */ jsx("svg", { className: "w-6 h-6", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24", children: /* @__PURE__ */ jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M6 18L18 6M6 6l12 12" }) })
       }
     ),
@@ -151,12 +148,12 @@ const EventModal = ({ event, isOpen, onClose, onUpdate }) => {
         /* @__PURE__ */ jsx("p", { className: "text-white", children: event.description })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs("div", { className: "mt-6 flex justify-end space-x-3", children: [
+    /* @__PURE__ */ jsxs("div", { className: "mt-6 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3", children: [
       /* @__PURE__ */ jsx(
         "button",
         {
           onClick: onClose,
-          className: "px-4 py-2 text-gray-400 hover:text-white transition-colors",
+          className: "px-4 py-3 sm:py-2 text-gray-400 hover:text-white transition-colors text-center",
           children: "Close"
         }
       ),
@@ -164,7 +161,7 @@ const EventModal = ({ event, isOpen, onClose, onUpdate }) => {
         "button",
         {
           onClick: onUpdate,
-          className: "px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors",
+          className: "px-4 py-3 sm:py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-center",
           children: "Edit"
         }
       )
@@ -360,14 +357,14 @@ const CreateEventTypeModal = ({ isOpen, onClose, onSuccess }) => {
           }
         )
       ] }),
-      /* @__PURE__ */ jsxs("div", { className: "flex justify-between pt-4", children: [
+      /* @__PURE__ */ jsxs("div", { className: "flex flex-col sm:flex-row justify-between pt-4 space-y-2 sm:space-y-0 sm:space-x-3", children: [
         /* @__PURE__ */ jsx(
           "button",
           {
             type: "button",
             onClick: handleClose,
             disabled: isLoading,
-            className: "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 disabled:opacity-50",
+            className: "bg-gray-600 text-white px-4 py-3 sm:py-2 rounded hover:bg-gray-700 disabled:opacity-50 text-center",
             children: "Cancel"
           }
         ),
@@ -376,7 +373,7 @@ const CreateEventTypeModal = ({ isOpen, onClose, onSuccess }) => {
           {
             type: "submit",
             disabled: isLoading || !formData.displayName,
-            className: "bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50",
+            className: "bg-primary text-white px-4 py-3 sm:py-2 rounded hover:bg-primary/90 disabled:opacity-50 text-center",
             children: isLoading ? "Creating..." : "Create Event Type"
           }
         )
@@ -534,36 +531,38 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
             }
           )
         ] }),
-        /* @__PURE__ */ jsxs("div", { className: "flex justify-between", children: [
+        /* @__PURE__ */ jsxs("div", { className: "flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-3", children: [
           /* @__PURE__ */ jsx(
             "button",
             {
               type: "submit",
               disabled: isLoading,
-              className: "bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50",
+              className: "bg-primary text-white px-4 py-3 sm:py-2 rounded hover:bg-primary/90 disabled:opacity-50 text-center order-1 sm:order-1",
               children: isLoading ? "Saving..." : initialEvent ? "Update Event" : "Create Event"
             }
           ),
-          initialEvent && onDelete && /* @__PURE__ */ jsx(
-            "button",
-            {
-              type: "button",
-              onClick: handleDelete,
-              disabled: isLoading,
-              className: "bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50",
-              children: "Delete Event"
-            }
-          ),
-          /* @__PURE__ */ jsx(
-            "button",
-            {
-              type: "button",
-              onClick: onClose,
-              disabled: isLoading,
-              className: "bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 disabled:opacity-50",
-              children: "Cancel"
-            }
-          )
+          /* @__PURE__ */ jsxs("div", { className: "flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 order-2 sm:order-2", children: [
+            initialEvent && onDelete && /* @__PURE__ */ jsx(
+              "button",
+              {
+                type: "button",
+                onClick: handleDelete,
+                disabled: isLoading,
+                className: "bg-red-600 text-white px-4 py-3 sm:py-2 rounded hover:bg-red-700 disabled:opacity-50 text-center",
+                children: "Delete Event"
+              }
+            ),
+            /* @__PURE__ */ jsx(
+              "button",
+              {
+                type: "button",
+                onClick: onClose,
+                disabled: isLoading,
+                className: "bg-gray-600 text-white px-4 py-3 sm:py-2 rounded hover:bg-gray-700 disabled:opacity-50 text-center",
+                children: "Cancel"
+              }
+            )
+          ] })
         ] })
       ] })
     ] }),
@@ -615,9 +614,26 @@ const Timeline = ({
     const today = /* @__PURE__ */ new Date();
     return Math.ceil((today.getTime() - birthDate.getTime()) / (1e3 * 60 * 60 * 24));
   }, [birthDate]);
-  const totalYears = useMemo(() => {
+  useMemo(() => {
     return Math.ceil(totalDays / 365);
   }, [totalDays]);
+  const yearMarkers = useMemo(() => {
+    const markers = [];
+    const today = /* @__PURE__ */ new Date();
+    const currentYear = today.getFullYear();
+    const birthYear = birthDate.getFullYear();
+    for (let year = birthYear + 1; year <= currentYear; year++) {
+      const yearStart = new Date(year, 0, 1);
+      const daysToYearStart = Math.ceil((yearStart.getTime() - birthDate.getTime()) / (1e3 * 60 * 60 * 24));
+      const position = daysToYearStart / totalDays * 100;
+      markers.push({
+        year,
+        position: Math.min(position, 100)
+        // Cap at 100%
+      });
+    }
+    return markers;
+  }, [birthDate, totalDays]);
   const eventsWithPosition = useMemo(() => {
     return events.map((item) => {
       const eventDate = new Date(item.date);
@@ -663,59 +679,57 @@ const Timeline = ({
           },
           item.id
         )),
-        Array.from({ length: totalYears }).map((_, index) => {
-          const year = birthDate.getFullYear() + index + 1;
-          return /* @__PURE__ */ jsxs(React.Fragment, { children: [
-            /* @__PURE__ */ jsx(
-              "div",
-              {
-                className: "w-0.5 h-4 bg-white absolute",
-                style: { left: `${(index + 1) / totalYears * 100}%` }
-              }
-            ),
-            index % 5 === 0 && /* @__PURE__ */ jsx(
-              "div",
-              {
-                className: "absolute top-6 text-white text-xs bg-gray-900",
-                style: {
-                  left: `${(index + 1) / totalYears * 100}%`,
-                  transform: "translateX(-50%)"
-                },
-                children: year
-              }
-            )
-          ] }, year);
-        })
+        yearMarkers.map((marker) => /* @__PURE__ */ jsxs(React.Fragment, { children: [
+          /* @__PURE__ */ jsx(
+            "div",
+            {
+              className: "w-0.5 h-4 bg-white absolute",
+              style: { left: `${marker.position}%` }
+            }
+          ),
+          marker.year % 5 === 0 && /* @__PURE__ */ jsx(
+            "div",
+            {
+              className: "absolute top-6 text-white text-xs bg-gray-900",
+              style: {
+                left: `${marker.position}%`,
+                transform: "translateX(-50%)"
+              },
+              children: marker.year
+            }
+          )
+        ] }, marker.year))
       ] }),
-      isMobile && /* @__PURE__ */ jsxs("div", { className: "w-1 bg-white flex flex-col relative h-[150vh] mx-10", children: [
-        Array.from({ length: totalYears }).map((_, index) => {
-          const year = birthDate.getFullYear() + index + 1;
-          return /* @__PURE__ */ jsxs(React.Fragment, { children: [
-            /* @__PURE__ */ jsx(
-              "div",
-              {
-                className: "h-1 w-2 bg-white absolute translate",
-                style: { top: `${(index + 1) / totalYears * 100}%` }
-              }
-            ),
-            index % 5 === 0 && /* @__PURE__ */ jsx(
-              "div",
-              {
-                className: "absolute left-6 text-white text-xs bg-gray-900 ",
-                style: {
-                  top: `${(index + 1) / totalYears * 100}%`,
-                  transform: "translateY(-50%) translateX(-210%)"
-                },
-                children: year
-              }
-            )
-          ] }, year);
-        }),
+      isMobile && /* @__PURE__ */ jsxs("div", { className: "flex flex-col relative h-screen mx-8 pb-20", children: [
+        /* @__PURE__ */ jsx("div", { className: "w-1 bg-white h-full absolute left-8" }),
+        yearMarkers.map((marker) => /* @__PURE__ */ jsxs(React.Fragment, { children: [
+          /* @__PURE__ */ jsx(
+            "div",
+            {
+              className: "h-1 w-2 bg-white absolute left-8",
+              style: { top: `${marker.position}%` }
+            }
+          ),
+          marker.year % 5 === 0 && /* @__PURE__ */ jsx(
+            "div",
+            {
+              className: "absolute left-6 text-white text-xs bg-gray-900 px-2 py-1 rounded",
+              style: {
+                top: `${marker.position}%`,
+                transform: "translateY(-50%) translateX(-180%)"
+              },
+              children: marker.year
+            }
+          )
+        ] }, marker.year)),
         eventsWithPosition.map((item, index) => /* @__PURE__ */ jsx(
           "div",
           {
-            className: `flex flex-row h-auto absolute ${isBirthEvent(item) ? "-translate-x-2.5" : "rotate-180"}`,
-            style: { top: `${item.position}%` },
+            className: "absolute",
+            style: {
+              top: `${item.position}%`,
+              left: isBirthEvent(item) ? "4px" : "8px"
+            },
             children: /* @__PURE__ */ jsx(Pin, { event: item, isBirth: isBirthEvent(item), handleClick: handlePinClick, isMobile: true, index })
           },
           item.id
@@ -756,6 +770,19 @@ const Timeline = ({
 const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }) => {
   const [selectedTypeIds, setSelectedTypeIds] = useState([]);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setIsExpanded(false);
+      }
+    };
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
   useEffect(() => {
     if (eventTypes.length > 0) {
       setSelectedTypeIds([]);
@@ -777,18 +804,17 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }) => {
     {
       className: "fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 transition-all duration-300 ease-in-out",
       style: {
-        height: isExpanded ? "auto" : "4rem",
+        height: isExpanded ? isMobile ? "70vh" : "auto" : isMobile ? "3rem" : "4rem",
         overflow: "hidden"
       },
-      children: /* @__PURE__ */ jsxs("div", { className: "max-w-screen-xl mx-auto", children: [
-        /* @__PURE__ */ jsxs("div", { className: "flex justify-between items-center p-4", children: [
-          /* @__PURE__ */ jsxs("div", { className: "flex items-center space-x-3", children: [
-            /* @__PURE__ */ jsx("h2", { className: "text-white text-xl font-semibold", children: "Event Categories" }),
-            selectedTypeIds.length > 0 && /* @__PURE__ */ jsxs("span", { className: "text-sm text-primary bg-primary/10 px-2 py-1 rounded", children: [
-              "Showing only ",
-              eventTypes.find((t) => t.id === selectedTypeIds[0])?.displayName
+      children: /* @__PURE__ */ jsxs("div", { className: "max-w-screen-xl mx-auto h-full flex flex-col", children: [
+        /* @__PURE__ */ jsxs("div", { className: `flex ${isMobile ? "flex-col" : "justify-between"} items-center ${isMobile ? "p-2" : "p-4"} flex-shrink-0`, children: [
+          /* @__PURE__ */ jsxs("div", { className: `flex items-center ${isMobile ? "w-full justify-between" : "space-x-3"}`, children: [
+            /* @__PURE__ */ jsxs("div", { className: "flex items-center space-x-2", children: [
+              /* @__PURE__ */ jsx("h2", { className: `text-white ${isMobile ? "text-lg" : "text-xl"} font-semibold`, children: "Event Categories" }),
+              selectedTypeIds.length > 0 && /* @__PURE__ */ jsx("span", { className: "text-xs text-primary bg-primary/10 px-2 py-1 rounded", children: isMobile ? "Filtered" : `Showing only ${eventTypes.find((t) => t.id === selectedTypeIds[0])?.displayName}` }),
+              selectedTypeIds.length === 0 && /* @__PURE__ */ jsx("span", { className: "text-xs text-gray-400 bg-gray-700/50 px-2 py-1 rounded", children: "All events" })
             ] }),
-            selectedTypeIds.length === 0 && /* @__PURE__ */ jsx("span", { className: "text-sm text-gray-400 bg-gray-700/50 px-2 py-1 rounded", children: "Showing all events" }),
             /* @__PURE__ */ jsx(
               "button",
               {
@@ -797,7 +823,7 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }) => {
                 children: /* @__PURE__ */ jsx(
                   "svg",
                   {
-                    className: `w-6 h-6 transform transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`,
+                    className: `${isMobile ? "w-5 h-5" : "w-6 h-6"} transform transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`,
                     fill: "none",
                     stroke: "currentColor",
                     viewBox: "0 0 24 24",
@@ -811,41 +837,45 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }) => {
             "button",
             {
               onClick: onAddClick,
-              className: "bg-gradient-to-b from-primary to-orange-600 hover:from-orange-600 hover:to-primary text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors",
+              className: `bg-gradient-to-b from-primary to-orange-600 hover:from-orange-600 hover:to-primary text-white ${isMobile ? "px-3 py-2 text-sm" : "px-4 py-2"} rounded-lg flex items-center space-x-2 transition-colors ${isMobile ? "mt-2 w-full justify-center" : ""}`,
               children: [
                 /* @__PURE__ */ jsx(
                   "svg",
                   {
-                    className: "w-5 h-5",
+                    className: `${isMobile ? "w-4 h-4" : "w-5 h-5"}`,
                     fill: "none",
                     stroke: "currentColor",
                     viewBox: "0 0 24 24",
                     children: /* @__PURE__ */ jsx("path", { strokeLinecap: "round", strokeLinejoin: "round", strokeWidth: 2, d: "M12 4v16m8-8H4" })
                   }
                 ),
-                /* @__PURE__ */ jsx("span", { children: "Add Event" })
+                /* @__PURE__ */ jsx("span", { children: isMobile ? "Add" : "Add Event" })
               ]
             }
           )
         ] }),
-        /* @__PURE__ */ jsxs("div", { className: `grid grid-cols-2 md:grid-cols-4 gap-4 p-4 transition-all duration-300 ${isExpanded ? "opacity-100" : "opacity-0"}`, children: [
+        /* @__PURE__ */ jsx("div", { className: `${isExpanded ? "flex-1 overflow-y-auto" : ""}`, children: /* @__PURE__ */ jsxs("div", { className: `grid ${isMobile ? "grid-cols-1" : "grid-cols-2"} md:grid-cols-4 gap-${isMobile ? "2" : "4"} ${isMobile ? "p-2" : "p-4"} transition-all duration-300 ${isExpanded ? "opacity-100" : "opacity-0"}`, children: [
           defaultEventTypes.map((type) => /* @__PURE__ */ jsxs(
             "button",
             {
               onClick: () => type.name !== "birth" && handleTypeToggle(type.id),
-              className: `flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${type.name === "birth" ? "bg-gray-600 text-gray-300 cursor-not-allowed" : selectedTypeIds.includes(type.id) ? "bg-primary text-white" : selectedTypeIds.length === 0 ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"}`,
+              className: `flex items-center ${isMobile ? "justify-between" : "space-x-2"} ${isMobile ? "px-4 py-3" : "px-3 py-2"} rounded-lg transition-all duration-200 ${type.name === "birth" ? "bg-gray-600 text-gray-300 cursor-not-allowed" : selectedTypeIds.includes(type.id) ? "bg-primary text-white" : selectedTypeIds.length === 0 ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"}`,
               disabled: type.name === "birth",
               children: [
-                /* @__PURE__ */ jsx(
-                  "div",
-                  {
-                    className: "w-4 h-4 rounded-full",
-                    style: { backgroundColor: type.color }
-                  }
-                ),
-                /* @__PURE__ */ jsx("span", { children: type.displayName }),
-                type.name === "birth" && /* @__PURE__ */ jsx("span", { className: "text-xs text-gray-400", children: "(Required)" }),
-                selectedTypeIds.includes(type.id) && type.name !== "birth" && /* @__PURE__ */ jsx("span", { className: "text-xs text-gray-300", children: "(Only)" })
+                /* @__PURE__ */ jsxs("div", { className: "flex items-center space-x-2", children: [
+                  /* @__PURE__ */ jsx(
+                    "div",
+                    {
+                      className: `${isMobile ? "w-5 h-5" : "w-4 h-4"} rounded-full`,
+                      style: { backgroundColor: type.color }
+                    }
+                  ),
+                  /* @__PURE__ */ jsx("span", { className: `${isMobile ? "text-base" : "text-sm"}`, children: type.displayName })
+                ] }),
+                /* @__PURE__ */ jsxs("div", { className: "flex items-center space-x-1", children: [
+                  type.name === "birth" && /* @__PURE__ */ jsx("span", { className: "text-xs text-gray-400", children: "(Required)" }),
+                  selectedTypeIds.includes(type.id) && type.name !== "birth" && /* @__PURE__ */ jsx("span", { className: "text-xs text-gray-300", children: "(Only)" })
+                ] })
               ]
             },
             type.id
@@ -856,24 +886,28 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }) => {
               "button",
               {
                 onClick: () => handleTypeToggle(type.id),
-                className: `flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 ${selectedTypeIds.includes(type.id) ? "bg-primary text-white" : selectedTypeIds.length === 0 ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"}`,
+                className: `flex items-center ${isMobile ? "justify-between" : "space-x-2"} ${isMobile ? "px-4 py-3" : "px-3 py-2"} rounded-lg transition-all duration-200 ${selectedTypeIds.includes(type.id) ? "bg-primary text-white" : selectedTypeIds.length === 0 ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white hover:bg-gray-800"}`,
                 children: [
-                  /* @__PURE__ */ jsx(
-                    "div",
-                    {
-                      className: "w-4 h-4 rounded-full",
-                      style: { backgroundColor: type.color }
-                    }
-                  ),
-                  /* @__PURE__ */ jsx("span", { children: type.displayName }),
-                  /* @__PURE__ */ jsx("span", { className: "text-xs text-gray-500", children: "(Custom)" }),
-                  selectedTypeIds.includes(type.id) && /* @__PURE__ */ jsx("span", { className: "text-xs text-gray-300", children: "(Only)" })
+                  /* @__PURE__ */ jsxs("div", { className: "flex items-center space-x-2", children: [
+                    /* @__PURE__ */ jsx(
+                      "div",
+                      {
+                        className: `${isMobile ? "w-5 h-5" : "w-4 h-4"} rounded-full`,
+                        style: { backgroundColor: type.color }
+                      }
+                    ),
+                    /* @__PURE__ */ jsx("span", { className: `${isMobile ? "text-base" : "text-sm"}`, children: type.displayName })
+                  ] }),
+                  /* @__PURE__ */ jsxs("div", { className: "flex items-center space-x-1", children: [
+                    /* @__PURE__ */ jsx("span", { className: "text-xs text-gray-500", children: "(Custom)" }),
+                    selectedTypeIds.includes(type.id) && /* @__PURE__ */ jsx("span", { className: "text-xs text-gray-300", children: "(Only)" })
+                  ] })
                 ]
               },
               type.id
             ))
           ] })
-        ] })
+        ] }) })
       ] })
     }
   );
@@ -1052,7 +1086,7 @@ const TimelineContainer = ({ events, sessionId }) => {
     ] });
   }
   return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx("div", { className: "w-full flex flex-col justify-center relative align-center sm:mb-24 md:mb-0", children: /* @__PURE__ */ jsx("div", { className: "mb-36", children: /* @__PURE__ */ jsx(
+    /* @__PURE__ */ jsx("div", { className: "w-full flex flex-col justify-center relative align-center sm:mb-24 md:mb-0", children: /* @__PURE__ */ jsx("div", { className: "mb-36 sm:mb-48 md:mb-36", children: /* @__PURE__ */ jsx(
       Timeline,
       {
         events: filteredEvents,

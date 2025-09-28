@@ -176,19 +176,19 @@ const CreateEventTypeModal = ({ isOpen, onClose, onSuccess }: CreateEventTypeMod
             </select>
           </div>
 
-          <div className="flex justify-between pt-4">
+          <div className="flex flex-col sm:flex-row justify-between pt-4 space-y-2 sm:space-y-0 sm:space-x-3">
             <button
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 disabled:opacity-50"
+              className="bg-gray-600 text-white px-4 py-3 sm:py-2 rounded hover:bg-gray-700 disabled:opacity-50 text-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || !formData.displayName}
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
+              className="bg-primary text-white px-4 py-3 sm:py-2 rounded hover:bg-primary/90 disabled:opacity-50 text-center"
             >
               {isLoading ? 'Creating...' : 'Create Event Type'}
             </button>

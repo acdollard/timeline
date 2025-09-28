@@ -176,32 +176,34 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
               rows={3}
             />
           </div>
-          <div className="flex justify-between">
+          <div className="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-3">
             <button
               type="submit"
               disabled={isLoading}
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
+              className="bg-primary text-white px-4 py-3 sm:py-2 rounded hover:bg-primary/90 disabled:opacity-50 text-center order-1 sm:order-1"
             >
               {isLoading ? 'Saving...' : (initialEvent ? 'Update Event' : 'Create Event')}
             </button>
-            {initialEvent && onDelete && (
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 order-2 sm:order-2">
+              {initialEvent && onDelete && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isLoading}
+                  className="bg-red-600 text-white px-4 py-3 sm:py-2 rounded hover:bg-red-700 disabled:opacity-50 text-center"
+                >
+                  Delete Event
+                </button>
+              )}
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={onClose}
                 disabled={isLoading}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+                className="bg-gray-600 text-white px-4 py-3 sm:py-2 rounded hover:bg-gray-700 disabled:opacity-50 text-center"
               >
-                Delete Event
+                Cancel
               </button>
-            )}
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 disabled:opacity-50"
-            >
-              Cancel
-            </button>
+            </div>
           </div>
         </form>
       </div>

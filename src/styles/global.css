@@ -7,6 +7,9 @@
   --color-darkest-gray: #101010;
 
   --color-primary-gradient: linear-gradient(90deg,rgba(186, 57, 28, 1) 0%, rgba(136, 28, 186, 1) 50%, rgba(237, 221, 83, 1) 100%);
+
+  /* Mobile-specific improvements */
+  --touch-target-min: 44px;
   
   @keyframes ripple {
     0% {
@@ -55,4 +58,29 @@
     }
   }
   --animate-slideInLeft: slideInLeft 1.2s ease-out;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Ensure touch targets are large enough */
+  button, 
+  input[type="button"], 
+  input[type="submit"], 
+  a[role="button"] {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+  }
+  
+  /* Improve text readability on mobile */
+  body {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Prevent horizontal scroll on mobile */
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }

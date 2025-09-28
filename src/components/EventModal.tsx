@@ -30,7 +30,7 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onUpdat
       <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 md:mx-auto relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
+          className="absolute top-4 right-4 text-gray-400 hover:text-white p-1"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -61,16 +61,16 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onUpdat
           )}
         </div>
         
-        <div className="mt-6 flex justify-end space-x-3">
+        <div className="mt-6 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+            className="px-4 py-3 sm:py-2 text-gray-400 hover:text-white transition-colors text-center"
           >
             Close
           </button>
           <button
             onClick={onUpdate}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+            className="px-4 py-3 sm:py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-center"
           >
             Edit
           </button>

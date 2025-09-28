@@ -1,6 +1,6 @@
 import { e as createComponent, f as createAstro, k as renderComponent, r as renderTemplate, m as maybeRenderHead } from '../chunks/astro/server_cefmmz3r.mjs';
 import 'kleur/colors';
-import { $ as $$Layout } from '../chunks/Layout_D9xI5dYe.mjs';
+import { $ as $$Layout } from '../chunks/Layout_iIFij7cA.mjs';
 import { s as supabase } from '../chunks/supabase_riZVRtFr.mjs';
 export { renderers } from '../renderers.mjs';
 
