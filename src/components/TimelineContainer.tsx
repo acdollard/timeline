@@ -13,6 +13,9 @@ interface TimelineContainerProps {
 
 const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   
+  console.log('🔍 Initial events from server:', events);
+  console.log('🔍 Sample initial event with event_types:', events?.[0]);
+  
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [userEvents, setUserEvents] = useState<TimelineEvent[]>(events);
   const [error, setError] = useState<string | null>(null);
@@ -29,23 +32,15 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         throw new Error('No user ID available');
       }
       
-      // Fetch events with event type data
-      const { data, error } = await supabase
-        .from("events")
-        .select(`
-          *,
-          event_types (
-            id,
-            name,
-            display_name,
-            color,
-            icon
-          )
-        `)
-        .eq("user_id", sessionId)
-        .order("date", { ascending: true });
+      // Use API endpoint instead of direct Supabase query to ensure proper authentication
+      const eventsResponse = await fetch('/api/events');
+      if (!eventsResponse.ok) {
+        throw new Error(`Failed to fetch events: ${eventsResponse.statusText}`);
+      }
+      const data = await eventsResponse.json();
 
-      if (error) throw error;
+      console.log('🔍 Client-side events from API:', data);
+      console.log('🔍 Sample event with event_types:', data?.[0]);
       
       // Fetch event types separately for filters and form
       const response = await fetch('/api/event-types');

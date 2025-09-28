@@ -880,8 +880,8 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }) => {
 };
 
 const TimelineContainer = ({ events, sessionId }) => {
-  console.log("🔍 Initial events passed to TimelineContainer:", events);
-  console.log("🔍 sessionId passed to TimelineContainer:", sessionId);
+  console.log("🔍 Initial events from server:", events);
+  console.log("🔍 Sample initial event with event_types:", events?.[0]);
   const [selectedTypeIds, setSelectedTypeIds] = useState([]);
   const [userEvents, setUserEvents] = useState(events);
   const [error, setError] = useState(null);
@@ -892,22 +892,16 @@ const TimelineContainer = ({ events, sessionId }) => {
   const fetchEvents = async () => {
     try {
       setIsLoading(true);
-      console.log("🔍 Using sessionId from props:", sessionId);
       if (!sessionId) {
         throw new Error("No user ID available");
       }
-      const { data, error: error2 } = await supabase.from("events").select(`
-          *,
-          event_types (
-            id,
-            name,
-            display_name,
-            color,
-            icon
-          )
-        `).eq("user_id", sessionId).order("date", { ascending: true });
-      console.log("🔍 Events query result:", { data, error: error2 });
-      if (error2) throw error2;
+      const eventsResponse = await fetch("/api/events");
+      if (!eventsResponse.ok) {
+        throw new Error(`Failed to fetch events: ${eventsResponse.statusText}`);
+      }
+      const data = await eventsResponse.json();
+      console.log("🔍 Client-side events from API:", data);
+      console.log("🔍 Sample event with event_types:", data?.[0]);
       const response = await fetch("/api/event-types");
       if (!response.ok) {
         throw new Error(`Failed to fetch event types: ${response.statusText}`);
