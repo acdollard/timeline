@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { EventType } from '../utils/pinColors';
+import type { EventType } from '../types/eventType';
 import { getPinColor } from '../utils/pinColors';
 
 interface CustomSelectProps {
@@ -41,8 +41,8 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-primary flex items-center justify-between"
       >
         <div className="flex items-center space-x-2">
-          <div className={`w-3 h-3 rounded-full ${getPinColor(value)}`} />
-          <span>{formatOption(value)}</span>
+          <div className={`w-3 h-3 rounded-full ${getPinColor(value.id)}`} />
+          <span>{formatOption(value.id)}</span>
         </div>
         <svg
           className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -66,20 +66,20 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         >
           {options.map((option) => (
             <button
-              key={option}
+              key={option.id}
               type="button"
               onClick={() => {
                 onChange(option);
                 setIsOpen(false);
               }}
               className={`w-full px-3 py-2 text-left text-white hover:bg-gray-700 flex items-center space-x-2 ${
-                value === option ? 'bg-gray-700' : ''
+                value.id === option.id ? 'bg-gray-700' : ''
               }`}
               role="option"
               aria-selected={value === option}
             >
-              <div className={`w-3 h-3 rounded-full ${getPinColor(option)}`} />
-              <span>{formatOption(option)}</span>
+              <div className={`w-3 h-3 rounded-full ${getPinColor(option.id)}`} />
+              <span>{formatOption(option.id)}</span>
             </button>
           ))}
         </div>
