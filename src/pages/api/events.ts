@@ -5,10 +5,28 @@ export const GET: APIRoute = async ({ params }) => {
   try {
     if (params.id) {
       // Get single event
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        return new Response(JSON.stringify({ error: 'No authenticated user' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select(`
+          *,
+          event_types (
+            id,
+            name,
+            display_name,
+            color,
+            icon
+          )
+        `)
         .eq('id', params.id)
+        .eq('user_id', session.user.id)
         .single();
 
       if (error) {
@@ -25,11 +43,29 @@ export const GET: APIRoute = async ({ params }) => {
       });
     }
 
-    // Get all events
+    // Get all events for the authenticated user
     console.log('Fetching all events from Supabase...');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      return new Response(JSON.stringify({ error: 'No authenticated user' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     const { data, error } = await supabase
       .from('events')
-      .select('*')
+      .select(`
+        *,
+        event_types (
+          id,
+          name,
+          display_name,
+          color,
+          icon
+        )
+      `)
+      .eq('user_id', session.user.id)
       .order('date', { ascending: true });
 
     if (error) {

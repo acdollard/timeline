@@ -3,50 +3,23 @@ import type { EventType } from '../types/eventTypes';
 import { logger } from '../utils/logger';
 
 interface TimelineFiltersProps {
+  eventTypes: EventType[];
   onFilterChange: (selectedTypes: string[]) => void;
   onAddClick: () => void;
   children?: React.ReactNode;
 }
 
-const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) => {
-  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }: TimelineFiltersProps) => {
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch event types from API
-  const fetchEventTypes = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const response = await fetch('/api/event-types');
-      if (!response.ok) {
-        throw new Error(`Failed to fetch event types: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      const birthEvent = data.find((type: EventType) => type.name === 'birth');
-      const otherEvents = data.filter((type: EventType) => type.name !== 'birth');
-      setEventTypes([birthEvent, ...otherEvents]);
-      
-      // Initialize with no event types selected (show all by default)
+  // Initialize with no event types selected (show all by default) when eventTypes change
+  useEffect(() => {
+    if (eventTypes.length > 0) {
       setSelectedTypeIds([]);
       onFilterChange([]);
-      
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch event types';
-      logger.error('Failed to fetch event types', { error: errorMessage });
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchEventTypes();
-  }, []);
+  }, [eventTypes]);
 
   const handleTypeToggle = (typeId: string) => {
     console.log('handleTypeToggle', typeId);
@@ -60,47 +33,14 @@ const TimelineFilters = ({ onFilterChange, onAddClick }: TimelineFiltersProps) =
     onFilterChange(newSelectedTypeIds);
   };
 
-  const handleRefresh = () => {
-    fetchEventTypes();
-  };
 
-  if (isLoading) {
-    return (
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="flex justify-between items-center">
-            <h2 className="text-white text-xl font-semibold">Loading event types...</h2>
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 p-4">
-        <div className="max-w-screen-xl mx-auto">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-white text-xl font-semibold">Error loading event types</h2>
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-            <button
-              onClick={handleRefresh}
-              className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Separate default and custom event types
-  const defaultEventTypes = eventTypes.filter(type => type.isDefault);
-  const customEventTypes = eventTypes.filter(type => !type.isDefault);
+  // Separate default and custom event types, and organize them properly
+  const birthEvent = eventTypes.find((type: EventType) => type.name === 'birth');
+  const otherDefaultEvents = eventTypes.filter((type: EventType) => type.isDefault && type.name !== 'birth');
+  const customEventTypes = eventTypes.filter((type: EventType) => !type.isDefault);
+  
+  // Combine birth event with other default events
+  const defaultEventTypes = birthEvent ? [birthEvent, ...otherDefaultEvents] : otherDefaultEvents;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 transition-all duration-300 ease-in-out"

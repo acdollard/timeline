@@ -51,7 +51,16 @@ class EventService {
 
     const { data, error } = await supabase
       .from('events')
-      .select('*')
+      .select(`
+        *,
+        event_types (
+          id,
+          name,
+          display_name,
+          color,
+          icon
+        )
+      `)
       .eq('user_id', session.user.id)
       .order('date', { ascending: true });
 

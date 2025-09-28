@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { TimelineEvent } from '../types/events';
 import type { EventType } from '../types/eventTypes';
+import CreateEventTypeModal from './CreateEventTypeModal';
 
 interface EventFormModalProps {
   isOpen: boolean;
@@ -8,9 +9,11 @@ interface EventFormModalProps {
   onSubmit: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
   initialEvent?: TimelineEvent;
+  eventTypes: EventType[];
+  onRefreshEventTypes?: () => void;
 }
 
-const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: EventFormModalProps) => {
+const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eventTypes, onRefreshEventTypes }: EventFormModalProps) => {
   const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>({
     name: '',
     date: '',
@@ -18,40 +21,22 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
     type: '',
     description: ''
   });
-  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showCreateEventTypeModal, setShowCreateEventTypeModal] = useState(false);
 
-  // Fetch event types when modal opens
+  // Set default event type if none is selected when modal opens
   useEffect(() => {
-    if (isOpen) {
-      fetchEventTypes();
-    }
-  }, [isOpen]);
-
-  const fetchEventTypes = async () => {
-    try {
-      const response = await fetch('/api/event-types');
-      if (!response.ok) {
-        throw new Error('Failed to fetch event types');
+    if (isOpen && !formData.event_type_id && eventTypes.length > 0) {
+      const birthType = eventTypes.find((type: EventType) => type.name === 'birth');
+      if (birthType) {
+        setFormData(prev => ({ 
+          ...prev, 
+          event_type_id: birthType.id,
+          type: birthType.name
+        }));
       }
-      const data = await response.json();
-      setEventTypes(data);
-      
-      // Set default event type if none is selected
-      if (!formData.event_type_id && data.length > 0) {
-        const birthType = data.find((type: EventType) => type.name === 'birth');
-        if (birthType) {
-          setFormData(prev => ({ 
-            ...prev, 
-            event_type_id: birthType.id,
-            type: birthType.name
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch event types:', error);
     }
-  };
+  }, [isOpen, eventTypes]);
 
   useEffect(() => {
     if (initialEvent) {
@@ -106,6 +91,20 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
     }
   };
 
+  const handleCreateEventTypeSuccess = (newEventType: EventType) => {
+    // Automatically select the new event type
+    setFormData(prev => ({
+      ...prev,
+      event_type_id: newEventType.id,
+      type: newEventType.name
+    }));
+    
+    // Refresh event types in the parent component
+    if (onRefreshEventTypes) {
+      onRefreshEventTypes();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -140,6 +139,11 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
             <select
               value={formData.event_type_id}
               onChange={(e) => {
+                if (e.target.value === 'create-custom') {
+                  setShowCreateEventTypeModal(true);
+                  return;
+                }
+                
                 const selectedType = eventTypes.find(type => type.id === e.target.value);
                 setFormData({ 
                   ...formData, 
@@ -158,6 +162,9 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
                     {type.displayName}
                   </option>
                 ))}
+              <option value="create-custom" className="text-primary font-semibold">
+                + Create Custom Event Type
+              </option>
             </select>
           </div>
           <div>
@@ -198,6 +205,12 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent }: E
           </div>
         </form>
       </div>
+      
+      <CreateEventTypeModal
+        isOpen={showCreateEventTypeModal}
+        onClose={() => setShowCreateEventTypeModal(false)}
+        onSuccess={handleCreateEventTypeSuccess}
+      />
     </div>
   );
 };

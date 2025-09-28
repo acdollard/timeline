@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Timeline from './Timeline';
 import TimelineFilters from './TimelineFilters';
 import type { TimelineEvent } from '../types/events';
+import type { EventType } from '../types/eventTypes';
 import EventFormModal from './EventFormModal';
 import { supabase } from '../lib/supabase';
 
@@ -18,13 +19,17 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   const [showFormModal, setShowFormModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventType, setSelectedEventType] = useState<{ id: string; displayName: string } | null>(null);
-  const [eventTypes, setEventTypes] = useState<{ id: string; displayName: string }[]>([]);
+  const [eventTypes, setEventTypes] = useState<EventType[]>([]);
 
   const fetchEvents = async () => {
-    if (!sessionId) return;
-    
     try {
       setIsLoading(true);
+      
+      if (!sessionId) {
+        throw new Error('No user ID available');
+      }
+      
+      // Fetch events with event type data
       const { data, error } = await supabase
         .from("events")
         .select(`
@@ -39,16 +44,18 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         `)
         .eq("user_id", sessionId)
         .order("date", { ascending: true });
+
+      if (error) throw error;
       
+      // Fetch event types separately for filters and form
       const response = await fetch('/api/event-types');
       if (!response.ok) {
         throw new Error(`Failed to fetch event types: ${response.statusText}`);
       }
-      const eventTypes = await response.json();
+      const eventTypesData = await response.json();
 
-      if (error) throw error;
       setUserEvents(data || []);
-      setEventTypes(eventTypes || []);
+      setEventTypes(eventTypesData || []);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch events:', err);
@@ -58,9 +65,11 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     }
   };
 
-  // Fetch events when session is available
+  // Fetch events when sessionId is available
   useEffect(() => {
-    fetchEvents();
+    if (sessionId) {
+      fetchEvents();
+    }
   }, [sessionId]);
 
   // Memoize filtered events to prevent unnecessary recalculations
@@ -92,7 +101,8 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>) => {
     try {
       setIsLoading(true);
-      if (!sessionId) throw new Error('No authenticated user');
+      
+      if (!sessionId) throw new Error('No user ID available');
       
       const { data, error } = await supabase
         .from('events')
@@ -123,7 +133,8 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   const handleUpdateEvent = async (id: string, event: Omit<TimelineEvent, 'id'>) => {
     try {
       setIsLoading(true);
-      if (!sessionId) throw new Error('No authenticated user');
+      
+      if (!sessionId) throw new Error('No user ID available');
 
       const { data, error } = await supabase
         .from('events')
@@ -156,7 +167,8 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   const handleDeleteEvent = async (id: string) => {
     try {
       setIsLoading(true);
-      if (!sessionId) throw new Error('No authenticated user');
+      
+      if (!sessionId) throw new Error('No user ID available');
 
       const { error } = await supabase
         .from('events')
@@ -184,9 +196,9 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       setSelectedEventType(null);
     } else {
       // Find the event type details
-      const eventType = eventTypes.find(event => event.id === selectedTypes[0]);
+      const eventType = eventTypes.find(eventType => eventType.id === selectedTypes[0]);
       if (eventType) {
-        const selectedType = { id: selectedTypes[0], displayName: (eventType as any).displayName };
+        const selectedType = { id: selectedTypes[0], displayName: eventType.displayName };
         setSelectedEventType(selectedType);
       }
     }
@@ -223,6 +235,8 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
             date: '',
             description: ''
           } as TimelineEvent}
+          eventTypes={eventTypes}
+          onRefreshEventTypes={fetchEvents}
         />
       </div>
     );
@@ -234,11 +248,13 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         <div className="mb-36">
           <Timeline 
             events={filteredEvents} 
+            eventTypes={eventTypes}
             setShowFormModal={setShowFormModal} 
             showFormModal={showFormModal} 
             handleCreateEvent={handleCreateEvent}
             handleUpdateEvent={handleUpdateEvent}
             handleDeleteEvent={handleDeleteEvent}
+            onRefreshEventTypes={fetchEvents}
             error={error}
             isLoading={isLoading}
           />
@@ -247,6 +263,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
 
       <div className="w-full flex flex-col justify-end relative">     
         <TimelineFilters
+          eventTypes={eventTypes}
           onFilterChange={handleFilterChange}
           onAddClick={() => setShowFormModal(true)}
         />

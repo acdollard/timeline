@@ -3,25 +3,30 @@ import Pin from './Pin';
 import EventModal from './EventModal';
 import EventFormModal from './EventFormModal';
 import type { TimelineEvent } from '../types/events';
+import type { EventType } from '../types/eventTypes';
 
 interface TimelineProps {
   events?: TimelineEvent[];
+  eventTypes: EventType[];
   setShowFormModal: (show: boolean) => void;
   showFormModal: boolean;
   handleCreateEvent: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
   handleUpdateEvent: (id: string, event: Omit<TimelineEvent, 'id'>) => Promise<void>;
   handleDeleteEvent: (id: string) => Promise<void>;
+  onRefreshEventTypes: () => void;
   error: string | null;
   isLoading: boolean;
 }
 
 const Timeline = ({ 
   events = [], 
+  eventTypes,
   setShowFormModal, 
   showFormModal, 
   handleCreateEvent,
   handleUpdateEvent,
   handleDeleteEvent,
+  onRefreshEventTypes,
   error, 
 }: TimelineProps) => {
   const [showModal, setShowModal] = useState(false);
@@ -212,6 +217,8 @@ const Timeline = ({
         onSubmit={showUpdateForm ? handleUpdate : handleCreateEvent}
         onDelete={handleDelete}
         initialEvent={selectedEvent || undefined}
+        eventTypes={eventTypes}
+        onRefreshEventTypes={onRefreshEventTypes}
       />
     </>
   );

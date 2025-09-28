@@ -1,9 +1,6 @@
 import type { EventType } from '../types/eventTypes';
 
-// Legacy type for backward compatibility
-export type LegacyEventType = 'birth' | 'school' | 'travel' | 'relationships' | 'move' | 'career' | 'bucket-list' | 'hobbies' | string;
-
-// Default color mapping for backward compatibility
+// Default color mapping for legacy event types (fallback only)
 const DEFAULT_COLORS: Record<string, string> = {
   'birth': '#EF4444',
   'school': '#10B981',
@@ -15,47 +12,16 @@ const DEFAULT_COLORS: Record<string, string> = {
   'hobbies': '#6366F1'
 };
 
-// Get color for event type - supports both legacy string types and new EventType objects
+/**
+ * Get color for event type - supports both legacy string types and new EventType objects
+ * This is primarily used as a fallback when event_types data is not available
+ */
 export const getPinColor = (eventType: string | EventType): string => {
   if (typeof eventType === 'string') {
-    // Legacy support for string-based event types
+    // Legacy support for string-based event types (fallback only)
     return DEFAULT_COLORS[eventType] || '#c2c2c2';
   } else {
     // New EventType object with custom colors
     return eventType.color || '#c2c2c2';
-  }
-};
-
-// Legacy event types array for backward compatibility
-export const EVENT_TYPES: LegacyEventType[] = [
-  'birth',
-  'school',
-  'travel',
-  'relationships',
-  'move',
-  'career',
-  'bucket-list',
-  'hobbies'
-];
-
-// Get display name for event type
-export const getEventTypeDisplayName = (eventType: string | EventType): string => {
-  if (typeof eventType === 'string') {
-    // Legacy support - convert kebab-case to Title Case
-    return eventType.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
-  } else {
-    // New EventType object with display name
-    return eventType.displayName;
-  }
-};
-
-// Get icon for event type
-export const getEventTypeIcon = (eventType: string | EventType): string | undefined => {
-  if (typeof eventType === 'string') {
-    // Legacy support - no icons for string types
-    return undefined;
-  } else {
-    // New EventType object with icon
-    return eventType.icon;
   }
 }; 
