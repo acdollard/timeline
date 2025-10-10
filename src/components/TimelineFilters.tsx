@@ -115,7 +115,7 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }: TimelineFil
         <div className={`${isExpanded ? 'flex-1 overflow-y-auto' : ''}`}>
           <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} md:grid-cols-4 gap-${isMobile ? '2' : '4'} ${isMobile ? 'p-2' : 'p-4'} transition-all duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
           {/* Default Event Types */}
-          {defaultEventTypes.map(type => (
+          {otherDefaultEvents.map(type => (
             <button
               key={type.id}
               onClick={() => type.name !== 'birth' && handleTypeToggle(type.id)}
