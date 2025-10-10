@@ -116,20 +116,6 @@ const CreateEventTypeModal = ({ isOpen, onClose, onSuccess }: CreateEventTypeMod
           </div>
 
           <div>
-            <label className="block text-white mb-1">Internal Name (optional)</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-gray-700 text-white rounded px-3 py-2"
-              placeholder="Auto-generated from display name if empty"
-            />
-            <p className="text-gray-400 text-xs mt-1">
-              Used internally. Leave empty to auto-generate from display name.
-            </p>
-          </div>
-
-          <div>
             <label className="block text-white mb-1">Color *</label>
             <div className="flex items-center space-x-3">
               <input
@@ -160,21 +146,7 @@ const CreateEventTypeModal = ({ isOpen, onClose, onSuccess }: CreateEventTypeMod
             </div>
           </div>
 
-          <div>
-            <label className="block text-white mb-1">Icon (optional)</label>
-            <select
-              value={formData.icon}
-              onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-              className="w-full bg-gray-700 text-white rounded px-3 py-2"
-            >
-              <option value="">No icon</option>
-              {predefinedIcons.map((icon) => (
-                <option key={icon} value={icon}>
-                  {icon.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </option>
-              ))}
-            </select>
-          </div>
+        
 
           <div className="flex justify-between pt-4">
             <button

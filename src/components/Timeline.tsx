@@ -4,12 +4,15 @@ import EventModal from './EventModal';
 import EventFormModal from './EventFormModal';
 import type { TimelineEvent } from '../types/events';
 import type { EventType } from '../types/eventTypes';
+import CreateEventTypeModal from './CreateEventTypeModal';
 
 interface TimelineProps {
   events?: TimelineEvent[];
   eventTypes: EventType[];
   setShowFormModal: (show: boolean) => void;
+  setShowCreateEventTypeModal: (show: boolean) => void;
   showFormModal: boolean;
+  showCreateEventTypeModal: boolean;
   handleCreateEvent: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
   handleUpdateEvent: (id: string, event: Omit<TimelineEvent, 'id'>) => Promise<void>;
   handleDeleteEvent: (id: string) => Promise<void>;
@@ -28,6 +31,8 @@ const Timeline = ({
   handleDeleteEvent,
   onRefreshEventTypes,
   error, 
+  showCreateEventTypeModal,
+  setShowCreateEventTypeModal,
 }: TimelineProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
@@ -132,6 +137,13 @@ const Timeline = ({
       return event.event_types?.name === "birth" || event.type === "birth";
     };
   }, []);
+
+
+  const handleCreateEventTypeSuccess = (newEventType: EventType) => {
+    // Automatically select the new event type
+    setShowCreateEventTypeModal(false);
+    onRefreshEventTypes();
+  };
 
   return (
     <>
@@ -240,6 +252,11 @@ const Timeline = ({
         initialEvent={selectedEvent || undefined}
         eventTypes={eventTypes}
         onRefreshEventTypes={onRefreshEventTypes}
+      />
+      <CreateEventTypeModal
+        isOpen={showCreateEventTypeModal}
+        onClose={() => setShowCreateEventTypeModal(false)}
+        onSuccess={handleCreateEventTypeSuccess}
       />
     </>
   );

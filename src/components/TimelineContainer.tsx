@@ -4,6 +4,7 @@ import TimelineFilters from './TimelineFilters';
 import type { TimelineEvent } from '../types/events';
 import type { EventType } from '../types/eventTypes';
 import EventFormModal from './EventFormModal';
+import CreateEventTypeModal from './CreateEventTypeModal';
 import { supabase } from '../lib/supabase';
 
 interface TimelineContainerProps {
@@ -20,6 +21,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   const [userEvents, setUserEvents] = useState<TimelineEvent[]>(events);
   const [error, setError] = useState<string | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
+  const [showCreateEventTypeModal, setShowCreateEventTypeModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventType, setSelectedEventType] = useState<{ id: string; displayName: string } | null>(null);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
@@ -246,6 +248,8 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
             eventTypes={eventTypes}
             setShowFormModal={setShowFormModal} 
             showFormModal={showFormModal} 
+            showCreateEventTypeModal={showCreateEventTypeModal}
+            setShowCreateEventTypeModal={setShowCreateEventTypeModal}
             handleCreateEvent={handleCreateEvent}
             handleUpdateEvent={handleUpdateEvent}
             handleDeleteEvent={handleDeleteEvent}
@@ -261,6 +265,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
           eventTypes={eventTypes}
           onFilterChange={handleFilterChange}
           onAddClick={() => setShowFormModal(true)}
+          onAddEventTypeClick={() => setShowCreateEventTypeModal(true)}
         />
 
       </div>
