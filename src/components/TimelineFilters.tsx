@@ -159,7 +159,7 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick, onAddEventTyp
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <span>Add Event Type</span>
+            <span>Create Custom Event</span>
           </button>
           
           {/* Custom Event Types */}
