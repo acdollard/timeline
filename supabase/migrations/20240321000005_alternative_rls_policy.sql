@@ -26,3 +26,4 @@ CREATE POLICY "Users can view event types referenced by their events"
       AND event_type_id IS NOT NULL
     )
   );
+
