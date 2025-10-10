@@ -27,3 +27,4 @@ CREATE POLICY "event_types_select_policy"
       AND event_type_id IS NOT NULL
     )
   );
+
