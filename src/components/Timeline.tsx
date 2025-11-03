@@ -13,7 +13,7 @@ interface TimelineProps {
   setShowCreateEventTypeModal: (show: boolean) => void;
   showFormModal: boolean;
   showCreateEventTypeModal: boolean;
-  handleCreateEvent: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
+  handleCreateEvent: (event: Omit<TimelineEvent, 'id'>) => Promise<TimelineEvent | void>;
   handleUpdateEvent: (id: string, event: Omit<TimelineEvent, 'id'>) => Promise<void>;
   handleDeleteEvent: (id: string) => Promise<void>;
   onRefreshEventTypes: () => void;

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import type { TimelineEvent } from '../types/events';
 import type { EventType } from '../types/eventTypes';
 import CreateEventTypeModal from './CreateEventTypeModal';
+import PhotoUpload from './PhotoUpload';
+import { photoService } from '../services/photoService';
 
 interface EventFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (event: Omit<TimelineEvent, 'id'>) => Promise<void>;
+  onSubmit: (event: Omit<TimelineEvent, 'id'>) => Promise<TimelineEvent | void>;
   onDelete?: (id: string) => Promise<void>;
   initialEvent?: TimelineEvent;
   eventTypes: EventType[];
@@ -21,7 +23,9 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
     type: '',
     description: ''
   });
+  const [photos, setPhotos] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [showCreateEventTypeModal, setShowCreateEventTypeModal] = useState(false);
 
   // Set default event type if none is selected when modal opens
@@ -47,6 +51,9 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
         type: initialEvent.type || '',
         description: initialEvent.description || ''
       });
+      // Don't load photos for editing in this implementation
+      // Photos can be managed separately after event creation
+      setPhotos([]);
     } else {
       // Reset form for new events
       setFormData({
@@ -56,6 +63,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
         type: '',
         description: ''
       });
+      setPhotos([]);
     }
   }, [initialEvent]);
 
@@ -68,7 +76,28 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
     
     try {
       setIsLoading(true);
-      await onSubmit(formData);
+      
+      // Step 1: Create the event
+      const createdEvent = await onSubmit(formData);
+      
+      // Step 2: Upload photos if any were selected (only for new events)
+      if (!initialEvent && photos.length > 0 && createdEvent) {
+        setIsUploadingPhotos(true);
+        try {
+          // Upload photos sequentially to avoid overwhelming the server
+          for (const photo of photos) {
+            await photoService.uploadPhoto(createdEvent.id, photo);
+          }
+        } catch (photoError) {
+          console.error('Error uploading photos:', photoError);
+          // Don't fail the entire operation if photo upload fails
+          // The event is already created, user can add photos later
+          alert('Event created, but some photos failed to upload. You can add them later.');
+        } finally {
+          setIsUploadingPhotos(false);
+        }
+      }
+      
       onClose();
     } catch (error) {
       // Error is handled by the parent component
@@ -176,13 +205,29 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
               rows={3}
             />
           </div>
+          
+          {/* Photo Upload Section - Only show for new events */}
+          {!initialEvent && (
+            <PhotoUpload
+              photos={photos}
+              onPhotosChange={setPhotos}
+              maxPhotos={10}
+              maxFileSize={10 * 1024 * 1024} // 10MB
+            />
+          )}
+          
           <div className="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-3">
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || isUploadingPhotos}
               className="bg-primary text-white px-4 py-3 sm:py-2 rounded hover:bg-primary/90 disabled:opacity-50 text-center order-1 sm:order-1"
             >
-              {isLoading ? 'Saving...' : (initialEvent ? 'Update Event' : 'Create Event')}
+              {isUploadingPhotos 
+                ? 'Uploading photos...' 
+                : isLoading 
+                  ? 'Saving...' 
+                  : (initialEvent ? 'Update Event' : 'Create Event')
+              }
             </button>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 order-2 sm:order-2">
               {initialEvent && onDelete && (

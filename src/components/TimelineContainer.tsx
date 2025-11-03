@@ -13,9 +13,7 @@ interface TimelineContainerProps {
 }
 
 const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
-  
-  console.log('🔍 Initial events from server:', events);
-  console.log('🔍 Sample initial event with event_types:', events?.[0]);
+
   
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [userEvents, setUserEvents] = useState<TimelineEvent[]>(events);
@@ -95,7 +93,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     }
   }, [selectedEventType]);
 
-  const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>) => {
+  const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent> => {
     try {
       setIsLoading(true);
       
@@ -112,12 +110,46 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
             display_name,
             color,
             icon
+          ),
+          event_photos (
+            id,
+            event_id,
+            user_id,
+            file_name,
+            file_path,
+            file_size,
+            mime_type,
+            alt_text,
+            sort_order,
+            created_at,
+            updated_at
           )
         `)
         .single();
 
       if (error) throw error;
+      
+      // Enrich photos with signed URLs if any exist
+      if (data && data.event_photos && data.event_photos.length > 0) {
+        const photosWithUrls = await Promise.all(
+          data.event_photos.map(async (photo: any) => {
+            const { data: urlData } = await supabase.storage
+              .from('event-photos')
+              .createSignedUrl(photo.file_path, 3600);
+            
+            return {
+              ...photo,
+              url: urlData?.signedUrl || ''
+            };
+          })
+        );
+        data.photos = photosWithUrls;
+        delete data.event_photos;
+      } else if (data) {
+        data.photos = [];
+      }
       await fetchEvents();
+      return data;
     } catch (err) {
       console.error('Failed to create event:', err);
       setError(err instanceof Error ? err.message : 'Failed to create event');

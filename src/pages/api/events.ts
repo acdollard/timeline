@@ -1,5 +1,30 @@
 import type { APIRoute } from 'astro';
 import { supabase } from '../../lib/supabase';
+import type { EventPhoto } from '../../types/eventPhotos';
+
+const BUCKET_NAME = 'event-photos';
+
+/**
+ * Helper function to enrich photos with signed URLs
+ */
+async function enrichPhotosWithUrls(photos: EventPhoto[]): Promise<EventPhoto[]> {
+  if (!photos || photos.length === 0) return [];
+
+  const photosWithUrls = await Promise.all(
+    photos.map(async (photo) => {
+      const { data: urlData } = await supabase.storage
+        .from(BUCKET_NAME)
+        .createSignedUrl(photo.file_path, 3600);
+
+      return {
+        ...photo,
+        url: urlData?.signedUrl || ''
+      };
+    })
+  );
+
+  return photosWithUrls;
+}
 
 export const GET: APIRoute = async ({ params }) => {
   try {
@@ -23,6 +48,19 @@ export const GET: APIRoute = async ({ params }) => {
             display_name,
             color,
             icon
+          ),
+          event_photos (
+            id,
+            event_id,
+            user_id,
+            file_name,
+            file_path,
+            file_size,
+            mime_type,
+            alt_text,
+            sort_order,
+            created_at,
+            updated_at
           )
         `)
         .eq('id', params.id)
@@ -32,6 +70,15 @@ export const GET: APIRoute = async ({ params }) => {
       if (error) {
         console.error('Supabase error (single event):', error);
         throw error;
+      }
+
+      // Enrich photos with signed URLs
+      if (data.event_photos && data.event_photos.length > 0) {
+        data.photos = await enrichPhotosWithUrls(data.event_photos);
+        // Remove the raw event_photos field, keep only enriched photos
+        delete data.event_photos;
+      } else {
+        data.photos = [];
       }
 
       console.log('Successfully fetched event:', data)
@@ -63,6 +110,19 @@ export const GET: APIRoute = async ({ params }) => {
           display_name,
           color,
           icon
+        ),
+        event_photos (
+          id,
+          event_id,
+          user_id,
+          file_name,
+          file_path,
+          file_size,
+          mime_type,
+          alt_text,
+          sort_order,
+          created_at,
+          updated_at
         )
       `)
       .eq('user_id', session.user.id)
@@ -73,8 +133,22 @@ export const GET: APIRoute = async ({ params }) => {
       throw error;
     }
 
-    console.log('Successfully fetched events:', data);
-    return new Response(JSON.stringify(data), {
+    // Enrich all events' photos with signed URLs
+    const eventsWithPhotos = await Promise.all(
+      (data || []).map(async (event) => {
+        if (event.event_photos && event.event_photos.length > 0) {
+          event.photos = await enrichPhotosWithUrls(event.event_photos);
+          // Remove the raw event_photos field
+          delete event.event_photos;
+        } else {
+          event.photos = [];
+        }
+        return event;
+      })
+    );
+
+    console.log('Successfully fetched events:', eventsWithPhotos);
+    return new Response(JSON.stringify(eventsWithPhotos), {
       status: 200,
       headers: {
         'Content-Type': 'application/json'
