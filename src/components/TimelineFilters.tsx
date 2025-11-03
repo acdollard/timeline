@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import type { EventType } from '../types/eventTypes';
-import { logger } from '../utils/logger';
 
 interface TimelineFiltersProps {
   eventTypes: EventType[];
   onFilterChange: (selectedTypes: string[]) => void;
   onAddClick: () => void;
+  onAddEventTypeClick: () => void;
   children?: React.ReactNode;
 }
 
-const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }: TimelineFiltersProps) => {
+const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick, onAddEventTypeClick }: TimelineFiltersProps) => {
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -115,7 +115,7 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }: TimelineFil
         <div className={`${isExpanded ? 'flex-1 overflow-y-auto' : ''}`}>
           <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} md:grid-cols-4 gap-${isMobile ? '2' : '4'} ${isMobile ? 'p-2' : 'p-4'} transition-all duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0'}`}>
           {/* Default Event Types */}
-          {defaultEventTypes.map(type => (
+          {otherDefaultEvents.map(type => (
             <button
               key={type.id}
               onClick={() => type.name !== 'birth' && handleTypeToggle(type.id)}
@@ -147,6 +147,20 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick }: TimelineFil
               </div>
             </button>
           ))}
+          <button
+            onClick={onAddEventTypeClick}
+            className="flex items-center space-x-2 px-3 py-2 rounded-lg transition-all duration-200 bg-gray-700 text-white hover:bg-gray-800 hover:text-white"
+          >
+                        <svg
+              className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Create Custom Event</span>
+          </button>
           
           {/* Custom Event Types */}
           {customEventTypes.length > 0 && (
