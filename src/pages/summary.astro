@@ -67,10 +67,10 @@ if (events.length > 0) {
             const { data: urlData } = await supabase.storage
               .from("event-photos")
               .createSignedUrl(photo.file_path, 3600);
-            
+
             return {
               ...photo,
-              url: urlData?.signedUrl || ""
+              url: urlData?.signedUrl || "",
             };
           })
         );

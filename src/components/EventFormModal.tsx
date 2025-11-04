@@ -77,24 +77,28 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
     try {
       setIsLoading(true);
       
-      // Step 1: Create the event
-      const createdEvent = await onSubmit(formData);
+      // Step 1: Create or update the event
+      const resultEvent = await onSubmit(formData);
       
-      // Step 2: Upload photos if any were selected (only for new events)
-      if (!initialEvent && photos.length > 0 && createdEvent) {
-        setIsUploadingPhotos(true);
-        try {
-          // Upload photos sequentially to avoid overwhelming the server
-          for (const photo of photos) {
-            await photoService.uploadPhoto(createdEvent.id, photo);
+      // Step 2: Upload photos if any were selected
+      if (photos.length > 0) {
+        const eventId = initialEvent?.id || (resultEvent?.id);
+        
+        if (eventId) {
+          setIsUploadingPhotos(true);
+          try {
+            // Upload photos sequentially to avoid overwhelming the server
+            for (const photo of photos) {
+              await photoService.uploadPhoto(eventId, photo);
+            }
+          } catch (photoError) {
+            console.error('Error uploading photos:', photoError);
+            // Don't fail the entire operation if photo upload fails
+            const action = initialEvent ? 'updated' : 'created';
+            alert(`Event ${action}, but some photos failed to upload. You can add them later.`);
+          } finally {
+            setIsUploadingPhotos(false);
           }
-        } catch (photoError) {
-          console.error('Error uploading photos:', photoError);
-          // Don't fail the entire operation if photo upload fails
-          // The event is already created, user can add photos later
-          alert('Event created, but some photos failed to upload. You can add them later.');
-        } finally {
-          setIsUploadingPhotos(false);
         }
       }
       
@@ -206,15 +210,13 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
             />
           </div>
           
-          {/* Photo Upload Section - Only show for new events */}
-          {!initialEvent && (
-            <PhotoUpload
-              photos={photos}
-              onPhotosChange={setPhotos}
-              maxPhotos={10}
-              maxFileSize={10 * 1024 * 1024} // 10MB
-            />
-          )}
+          {/* Photo Upload Section - Available for both create and update */}
+          <PhotoUpload
+            photos={photos}
+            onPhotosChange={setPhotos}
+            maxPhotos={10}
+            maxFileSize={10 * 1024 * 1024} // 10MB
+          />
           
           <div className="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-3">
             <button

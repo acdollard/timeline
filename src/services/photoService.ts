@@ -5,10 +5,8 @@ import type { EventPhoto, UploadPhotoResult } from '../types/eventPhotos';
  * PhotoService handles all interactions between the event_photos table
  * and the event-photos storage bucket.
  * 
- * Flow:
- * 1. Upload file to storage bucket → Get file path
- * 2. Insert metadata into event_photos table → Get photo record
- * 3. Generate signed URL for display
+ * Note: uploadPhoto uses API endpoint for server-side authentication
+ * Other methods may still use direct Supabase client access
  */
 class PhotoService {
   private readonly BUCKET_NAME = 'event-photos';
@@ -26,80 +24,28 @@ class PhotoService {
     file: File,
     altText?: string
   ): Promise<UploadPhotoResult> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No authenticated user');
-
-    const userId = session.user.id;
-
-    // Step 1: Upload file to storage bucket
-    // Path structure: {user_id}/{event_id}/{filename}
-    const fileExt = file.name.split('.').pop();
-    // Generate unique filename: timestamp + random base-36 string
-    // .toString(36) converts random decimal to base-36 (includes "0." prefix)
-    // .substring(7) removes first 7 chars (removes "0." + first few chars for better randomness)
-    const randomStr = Math.random().toString(36).substring(7);
-    const fileName = `${Date.now()}-${randomStr}.${fileExt}`;
-    const filePath = `${userId}/${eventId}/${fileName}`;
-
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from(this.BUCKET_NAME)
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
-      throw new Error(`Failed to upload photo: ${uploadError.message}`);
+    // Use API endpoint for upload (handles authentication server-side)
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('eventId', eventId);
+    if (altText) {
+      formData.append('altText', altText);
     }
 
-    // Step 2: Insert metadata into event_photos table
-    // First, get the current max sort_order for this event
-    const { data: existingPhotos } = await supabase
-      .from('event_photos')
-      .select('sort_order')
-      .eq('event_id', eventId)
-      .order('sort_order', { ascending: false })
-      .limit(1)
-      .single();
+    const response = await fetch('/api/photos', {
+      method: 'POST',
+      body: formData
+    });
 
-    const sortOrder = existingPhotos?.sort_order != null 
-      ? existingPhotos.sort_order + 1 
-      : 0;
-
-    const { data: photoData, error: dbError } = await supabase
-      .from('event_photos')
-      .insert({
-        event_id: eventId,
-        user_id: userId,
-        file_name: file.name, // Original filename
-        file_path: filePath, // Storage path
-        file_size: file.size,
-        mime_type: file.type,
-        alt_text: altText,
-        sort_order: sortOrder
-      })
-      .select()
-      .single();
-
-    if (dbError) {
-      // If database insert fails, clean up the uploaded file
-      await supabase.storage
-        .from(this.BUCKET_NAME)
-        .remove([filePath]);
-      
-      throw new Error(`Failed to save photo metadata: ${dbError.message}`);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to upload photo' }));
+      throw new Error(errorData.error || 'Failed to upload photo');
     }
 
-    // Step 3: Generate signed URL for immediate display
-    const { data: urlData } = await supabase.storage
-      .from(this.BUCKET_NAME)
-      .createSignedUrl(filePath, 3600); // URL valid for 1 hour
+    const result: UploadPhotoResult = await response.json();
+    return result;
 
-    return {
-      photo: photoData,
-      url: urlData?.signedUrl || ''
-    };
+
   }
 
   /**

@@ -38,9 +38,6 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         throw new Error(`Failed to fetch events: ${eventsResponse.statusText}`);
       }
       const data = await eventsResponse.json();
-
-      console.log('🔍 Client-side events from API:', data);
-      console.log('🔍 Sample event with event_types:', data?.[0]);
       
       // Fetch event types separately for filters and form
       const response = await fetch('/api/event-types');
@@ -159,7 +156,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     }
   };
 
-  const handleUpdateEvent = async (id: string, event: Omit<TimelineEvent, 'id'>) => {
+  const handleUpdateEvent = async (id: string, event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent> => {
     try {
       setIsLoading(true);
       
@@ -178,12 +175,47 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
             display_name,
             color,
             icon
+          ),
+          event_photos (
+            id,
+            event_id,
+            user_id,
+            file_name,
+            file_path,
+            file_size,
+            mime_type,
+            alt_text,
+            sort_order,
+            created_at,
+            updated_at
           )
         `)
         .single();
 
       if (error) throw error;
+      
+      // Enrich photos with signed URLs if any exist
+      if (data && data.event_photos && data.event_photos.length > 0) {
+        const photosWithUrls = await Promise.all(
+          data.event_photos.map(async (photo: any) => {
+            const { data: urlData } = await supabase.storage
+              .from('event-photos')
+              .createSignedUrl(photo.file_path, 3600);
+            
+            return {
+              ...photo,
+              url: urlData?.signedUrl || ''
+            };
+          })
+        );
+        data.photos = photosWithUrls;
+        delete data.event_photos;
+      } else if (data) {
+        data.photos = [];
+      }
+      
       await fetchEvents();
+      return data;
     } catch (err) {
       console.error('Failed to update event:', err);
       setError(err instanceof Error ? err.message : 'Failed to update event');
