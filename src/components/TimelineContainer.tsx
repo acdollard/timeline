@@ -318,6 +318,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
             handleUpdateEvent={handleUpdateEvent}
             handleDeleteEvent={handleDeleteEvent}
             onRefreshEventTypes={fetchEvents}
+            onRefreshEvents={fetchEvents}
             error={error}
             isLoading={isLoading}
           />

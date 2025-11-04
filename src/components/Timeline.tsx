@@ -17,6 +17,7 @@ interface TimelineProps {
   handleUpdateEvent: (id: string, event: Omit<TimelineEvent, 'id'>) => Promise<TimelineEvent | void>;
   handleDeleteEvent: (id: string) => Promise<void>;
   onRefreshEventTypes: () => void;
+  onRefreshEvents?: () => void; // Callback to refresh events after photo upload
   error: string | null;
   isLoading: boolean;
 }
@@ -30,6 +31,7 @@ const Timeline = ({
   handleUpdateEvent,
   handleDeleteEvent,
   onRefreshEventTypes,
+  onRefreshEvents,
   error, 
   showCreateEventTypeModal,
   setShowCreateEventTypeModal,
@@ -257,6 +259,7 @@ const Timeline = ({
         initialEvent={selectedEvent || undefined}
         eventTypes={eventTypes}
         onRefreshEventTypes={onRefreshEventTypes}
+        onRefreshEvents={onRefreshEvents}
       />
       <CreateEventTypeModal
         isOpen={showCreateEventTypeModal}

@@ -13,9 +13,10 @@ interface EventFormModalProps {
   initialEvent?: TimelineEvent;
   eventTypes: EventType[];
   onRefreshEventTypes?: () => void;
+  onRefreshEvents?: () => void; // Callback to refresh events list after photo upload
 }
 
-const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eventTypes, onRefreshEventTypes }: EventFormModalProps) => {
+const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eventTypes, onRefreshEventTypes, onRefreshEvents }: EventFormModalProps) => {
   const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>({
     name: '',
     date: '',
@@ -90,6 +91,10 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
             // Upload photos sequentially to avoid overwhelming the server
             for (const photo of photos) {
               await photoService.uploadPhoto(eventId, photo);
+            }
+            // Refresh events after photos are uploaded to show them immediately
+            if (onRefreshEvents) {
+              await onRefreshEvents();
             }
           } catch (photoError) {
             console.error('Error uploading photos:', photoError);
