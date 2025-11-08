@@ -44,8 +44,6 @@ class PhotoService {
 
     const result: UploadPhotoResult = await response.json();
     return result;
-
-
   }
 
   /**
@@ -91,39 +89,14 @@ class PhotoService {
    * @param photoId - The ID of the photo record
    */
   async deletePhoto(photoId: string): Promise<void> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No authenticated user');
+    const response = await fetch(`/api/photos/${photoId}`, {
+      method: 'DELETE'
+    });
 
-    // First, get the photo record to get the file path
-    const { data: photo, error: fetchError } = await supabase
-      .from('event_photos')
-      .select('file_path')
-      .eq('id', photoId)
-      .eq('user_id', session.user.id)
-      .single();
-
-    if (fetchError || !photo) {
-      throw new Error('Photo not found or access denied');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to delete photo' }));
+      throw new Error(errorData.error || 'Failed to delete photo');
     }
-
-    // Delete from storage bucket first
-    const { error: storageError } = await supabase.storage
-      .from(this.BUCKET_NAME)
-      .remove([photo.file_path]);
-
-    if (storageError) {
-      console.error('Failed to delete from storage:', storageError);
-      // Continue anyway - database cleanup is more important
-    }
-
-    // Then delete the database record
-    const { error: dbError } = await supabase
-      .from('event_photos')
-      .delete()
-      .eq('id', photoId)
-      .eq('user_id', session.user.id);
-
-    if (dbError) throw dbError;
   }
 
   /**
@@ -157,15 +130,18 @@ class PhotoService {
    * @param photoIds - Array of photo IDs in the desired order
    */
   async reorderPhotos(photoIds: string[]): Promise<void> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No authenticated user');
+    const response = await fetch('/api/photos/reorder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ photoIds })
+    });
 
-    // Update each photo with its new sort order
-    const updates = photoIds.map((photoId, index) => 
-      this.updatePhoto(photoId, { sort_order: index })
-    );
-
-    await Promise.all(updates);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to reorder photos' }));
+      throw new Error(errorData.error || 'Failed to reorder photos');
+    }
   }
 
   /**
@@ -174,32 +150,14 @@ class PhotoService {
    * @param eventId - The ID of the event
    */
   async deletePhotosByEventId(eventId: string): Promise<void> {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('No authenticated user');
+    const response = await fetch(`/api/photos/event/${eventId}`, {
+      method: 'DELETE'
+    });
 
-    // Get all photos for this event
-    const { data: photos } = await supabase
-      .from('event_photos')
-      .select('file_path')
-      .eq('event_id', eventId)
-      .eq('user_id', session.user.id);
-
-    if (photos && photos.length > 0) {
-      // Delete all files from storage
-      const filePaths = photos.map(p => p.file_path);
-      await supabase.storage
-        .from(this.BUCKET_NAME)
-        .remove(filePaths);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to delete event photos' }));
+      throw new Error(errorData.error || 'Failed to delete event photos');
     }
-
-    // Delete all database records
-    const { error } = await supabase
-      .from('event_photos')
-      .delete()
-      .eq('event_id', eventId)
-      .eq('user_id', session.user.id);
-
-    if (error) throw error;
   }
 }
 
