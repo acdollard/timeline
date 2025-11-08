@@ -22,6 +22,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [selectedEventType, setSelectedEventType] = useState<{ id: string; displayName: string } | null>(null);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
+  const [deletingEventTypeId, setDeletingEventTypeId] = useState<string | null>(null);
 
   const fetchEvents = async () => {
     try {
@@ -239,6 +240,40 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     }
   };
 
+  const handleDeleteEventType = async (id: string) => {
+    try {
+      setDeletingEventTypeId(id);
+
+      const response = await fetch(`/api/event-types/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to delete event type';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.details || errorData.error || errorMessage;
+        } catch (parseError) {
+          // Ignore JSON parse errors for empty responses
+        }
+        throw new Error(errorMessage);
+      }
+
+      setSelectedTypeIds(prev => prev.filter(typeId => typeId !== id));
+      if (selectedEventType?.id === id) {
+        setSelectedEventType(null);
+      }
+
+      await fetchEvents();
+    } catch (err) {
+      console.error('Failed to delete event type:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete event type');
+      throw err;
+    } finally {
+      setDeletingEventTypeId(null);
+    }
+  };
+
   const hasBirthEvent = userEvents.some(event => event.event_types?.name === 'birth');
 
   const handleFilterChange = (selectedTypes: string[]) => {
@@ -370,6 +405,8 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
           onFilterChange={handleFilterChange}
           onAddClick={() => setShowFormModal(true)}
           onAddEventTypeClick={() => setShowCreateEventTypeModal(true)}
+          onDeleteEventType={handleDeleteEventType}
+          deletingEventTypeId={deletingEventTypeId}
         />
       </div>
     </>

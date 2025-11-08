@@ -6,10 +6,12 @@ interface TimelineFiltersProps {
   onFilterChange: (selectedTypes: string[]) => void;
   onAddClick: () => void;
   onAddEventTypeClick: () => void;
+  onDeleteEventType: (id: string) => Promise<void>;
+  deletingEventTypeId?: string | null;
   children?: React.ReactNode;
 }
 
-const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick, onAddEventTypeClick }: TimelineFiltersProps) => {
+const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick, onAddEventTypeClick, onDeleteEventType, deletingEventTypeId }: TimelineFiltersProps) => {
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -40,7 +42,6 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick, onAddEventTyp
   }, [eventTypes]);
 
   const handleTypeToggle = (typeId: string) => {
-    console.log('handleTypeToggle', typeId);
     // If this type is already selected, deselect it (show all)
     // If this type is not selected, select only this type (show only this type)
     const newSelectedTypeIds = selectedTypeIds.includes(typeId)
@@ -49,6 +50,22 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick, onAddEventTyp
     
     setSelectedTypeIds(newSelectedTypeIds);
     onFilterChange(newSelectedTypeIds);
+  };
+
+  const handleDeleteCustomType = async (event: React.MouseEvent<HTMLButtonElement>, type: EventType) => {
+    event.stopPropagation();
+    const confirmed = window.confirm(`Delete custom event type "${type.displayName}"? This action cannot be undone.`);
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await onDeleteEventType(type.id);
+    } catch (err) {
+      console.error('Failed to delete event type:', err);
+      const message = err instanceof Error ? err.message : 'Failed to delete event type';
+      window.alert(message);
+    }
   };
 
 
@@ -168,33 +185,91 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick, onAddEventTyp
               {customEventTypes.length > 0 && defaultEventTypes.length > 0 && (
                 <div className="col-span-full border-t border-gray-700 my-2"></div>
               )}
-              {customEventTypes.map(type => (
-                <button
-                  key={type.id}
-                  onClick={() => handleTypeToggle(type.id)}
-                  className={`flex items-center ${isMobile ? 'justify-between' : 'space-x-2'} ${isMobile ? 'px-4 py-3' : 'px-3 py-2'} rounded-lg transition-all duration-200 ${
-                    selectedTypeIds.includes(type.id)
-                      ? 'bg-primary text-white' // Selected - show only this type
-                      : selectedTypeIds.length === 0
-                        ? 'bg-gray-700 text-white' // No selection - show all (this type is visible)
-                        : 'text-gray-400 hover:text-white hover:bg-gray-800' // Not selected - this type is hidden
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <div 
-                      className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full`} 
-                      style={{ backgroundColor: type.color }}
-                    />
-                    <span className={`${isMobile ? 'text-base' : 'text-sm'}`}>{type.displayName}</span>
+              {customEventTypes.map(type => {
+                const isSelected = selectedTypeIds.includes(type.id);
+                const isDeleting = deletingEventTypeId === type.id;
+                const wrapperBaseClasses = `group flex items-center ${isMobile ? 'px-4 py-3' : 'px-3 py-2'} rounded-lg transition-all duration-200`;
+                const wrapperStateClasses = isSelected
+                  ? 'bg-primary text-white'
+                  : selectedTypeIds.length === 0
+                    ? 'bg-gray-700 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800';
+
+                return (
+                  <div
+                    key={type.id}
+                    className={`${wrapperBaseClasses} ${wrapperStateClasses}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleTypeToggle(type.id)}
+                      className={`flex-1 flex items-center justify-between ${isMobile ? 'space-x-3' : 'space-x-2'}`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div 
+                          className={`${isMobile ? 'w-5 h-5' : 'w-4 h-4'} rounded-full`} 
+                          style={{ backgroundColor: type.color }}
+                        />
+                        <span className={`${isMobile ? 'text-base' : 'text-sm'}`}>{type.displayName}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <span className="text-xs text-gray-500 group-hover:text-gray-300 transition-colors">(Custom)</span>
+                        {isSelected && (
+                          <span className="text-xs text-gray-300">(Only)</span>
+                        )}
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => handleDeleteCustomType(event, type)}
+                      disabled={isDeleting}
+                      className={`ml-2 p-2 rounded-md transition-all duration-200 ${
+                        isDeleting
+                          ? 'cursor-wait opacity-60'
+                          : 'text-gray-400 hover:text-red-400 hover:bg-gray-900/50'
+                      }`}
+                      aria-label={`Delete ${type.displayName} event type`}
+                    >
+                      {isDeleting ? (
+                        <svg
+                          className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'} animate-spin`}
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-3h4m-6 3h8m-7 0v10m4-10v10"
+                          />
+                        </svg>
+                      )}
+                    </button>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-xs text-gray-500">(Custom)</span>
-                    {selectedTypeIds.includes(type.id) && (
-                      <span className="text-xs text-gray-300">(Only)</span>
-                    )}
-                  </div>
-                </button>
-              ))}
+                );
+              })}
             </>
           )}
           </div>
