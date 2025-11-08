@@ -1,10 +1,12 @@
 import React, { useRef, useState, useCallback } from 'react';
+import { compressImage, type CompressionOptions } from '../utils/imageCompression';
 
 interface PhotoUploadProps {
   photos: File[];
   onPhotosChange: (photos: File[]) => void;
   maxPhotos?: number;
   maxFileSize?: number; // in bytes, default 10MB
+  compressionOptions?: CompressionOptions;
 }
 
 interface PhotoPreview {
@@ -17,12 +19,14 @@ const PhotoUpload = ({
   photos, 
   onPhotosChange, 
   maxPhotos = 10,
-  maxFileSize = 10 * 1024 * 1024 // 10MB default
+  maxFileSize = 10 * 1024 * 1024, // 10MB default
+  compressionOptions
 }: PhotoUploadProps) => {
   const [previews, setPreviews] = useState<PhotoPreview[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   // Convert File objects to previews
   React.useEffect(() => {
@@ -55,30 +59,54 @@ const PhotoUpload = ({
     return null;
   };
 
-  const addPhotos = useCallback((newFiles: File[]) => {
+  const addPhotos = useCallback(async (newFiles: File[]) => {
     setError(null);
 
-    // Check if adding these would exceed max photos
     if (photos.length + newFiles.length > maxPhotos) {
       setError(`You can only upload up to ${maxPhotos} photos`);
       return;
     }
 
-    // Validate all files
-    const validFiles: File[] = [];
-    for (const file of newFiles) {
-      const validationError = validateFile(file);
-      if (validationError) {
-        setError(validationError);
-        continue;
-      }
-      validFiles.push(file);
-    }
+    try {
+      setIsCompressing(true);
 
-    if (validFiles.length > 0) {
-      onPhotosChange([...photos, ...validFiles]);
+      const compressedFiles: File[] = [];
+      for (const file of newFiles) {
+        let processedFile = file;
+        const validationError = validateFile(file);
+        if (validationError) {
+          setError(validationError);
+          continue;
+        }
+
+        // Only attempt compression if image is larger than 0.3MB or exceeds limits
+        if (file.size > 300 * 1024 || file.size > maxFileSize) {
+          processedFile = await compressImage(file, {
+            maxOutputSizeBytes: maxFileSize * 0.9,
+            ...compressionOptions
+          });
+        }
+
+        // Revalidate after compression
+        const postCompressionError = validateFile(processedFile);
+        if (postCompressionError) {
+          setError(postCompressionError);
+          continue;
+        }
+
+        compressedFiles.push(processedFile);
+      }
+
+      if (compressedFiles.length > 0) {
+        onPhotosChange([...photos, ...compressedFiles]);
+      }
+    } catch (compressionError) {
+      console.error('Failed to compress images:', compressionError);
+      setError('Failed to optimize images. Please try again or use smaller files.');
+    } finally {
+      setIsCompressing(false);
     }
-  }, [photos, onPhotosChange, maxPhotos, maxFileSize]);
+  }, [photos, onPhotosChange, maxPhotos, maxFileSize, compressionOptions]);
 
   const removePhoto = (index: number) => {
     const newPhotos = photos.filter((_, i) => i !== index);
@@ -174,7 +202,7 @@ const PhotoUpload = ({
               />
             </svg>
             <p className="text-gray-300 text-sm">
-              Drag and drop photos here, or click to browse
+              {isCompressing ? 'Optimizing images…' : 'Drag and drop photos here, or click to browse'}
             </p>
             <p className="text-gray-500 text-xs">
               {photos.length} / {maxPhotos} photos • Max {formatFileSize(maxFileSize)} per file

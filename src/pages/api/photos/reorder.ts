@@ -36,7 +36,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    // Verify ownership of all photos first
     const { data: photos, error: fetchError } = await supabase
       .from('event_photos')
       .select('id, user_id')
@@ -58,22 +57,17 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    // Update sort_order for each photo
-    for (let index = 0; index < photoIds.length; index++) {
-      const photoId = photoIds[index];
-      const { error: updateError } = await supabase
-        .from('event_photos')
-        .update({ sort_order: index })
-        .eq('id', photoId)
-        .eq('user_id', userId);
+    const updates = photoIds.map((photoId, index) => ({ id: photoId, sort_order: index }));
+    const { error: updateError } = await supabase
+      .from('event_photos')
+      .upsert(updates, { onConflict: 'id' });
 
-      if (updateError) {
-        console.error('Failed to update photo order:', updateError);
-        return new Response(JSON.stringify({ error: 'Failed to update photo order' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+    if (updateError) {
+      console.error('Failed to update photo order:', updateError);
+      return new Response(JSON.stringify({ error: 'Failed to update photo order' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     return new Response(JSON.stringify({ success: true }), {
