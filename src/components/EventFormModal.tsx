@@ -30,6 +30,8 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [isManagingPhotos, setIsManagingPhotos] = useState(false);
+  const [isCompressingUploads, setIsCompressingUploads] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [showCreateEventTypeModal, setShowCreateEventTypeModal] = useState(false);
 
   // Set default event type if none is selected when modal opens
@@ -72,17 +74,29 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
     }
   }, [initialEvent]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setFormError(null);
+    }
+  }, [isOpen]);
+
   const handleDeleteExistingPhoto = async (photoId: string) => {
     try {
+      setFormError(null);
       setIsManagingPhotos(true);
       await photoService.deletePhoto(photoId);
       setExistingPhotos(prev => prev.filter(photo => photo.id !== photoId));
       if (onRefreshEvents) {
-        await onRefreshEvents();
+        try {
+          await onRefreshEvents();
+        } catch (refreshError) {
+          console.error('Failed to refresh events after photo delete:', refreshError);
+          setFormError('Photo removed locally, but failed to refresh events. Try reloading.');
+        }
       }
     } catch (error) {
       console.error('Failed to delete photo:', error);
-      alert('Failed to delete photo. Please try again.');
+      setFormError('Failed to delete photo. Please try again.');
     } finally {
       setIsManagingPhotos(false);
     }
@@ -96,16 +110,22 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
     [newOrder[index], newOrder[newIndex]] = [newOrder[newIndex], newOrder[index]];
 
     try {
+      setFormError(null);
       setIsManagingPhotos(true);
       const orderedIds = newOrder.map(photo => photo.id);
       await photoService.reorderPhotos(orderedIds);
       setExistingPhotos(newOrder);
       if (onRefreshEvents) {
-        await onRefreshEvents();
+        try {
+          await onRefreshEvents();
+        } catch (refreshError) {
+          console.error('Failed to refresh events after reorder:', refreshError);
+          setFormError('Order updated locally, but failed to refresh events. Try reloading.');
+        }
       }
     } catch (error) {
       console.error('Failed to reorder photos:', error);
-      alert('Failed to reorder photos. Please try again.');
+      setFormError('Failed to reorder photos. Please try again.');
     } finally {
       setIsManagingPhotos(false);
     }
@@ -114,49 +134,51 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.event_type_id) {
-      alert('Please select an event type');
+      setFormError('Please select an event type.');
       return;
     }
     
     try {
+      setFormError(null);
       setIsLoading(true);
       
-      // Step 1: Create or update the event
       const resultEvent = await onSubmit(formData);
+      const eventId = initialEvent?.id || (resultEvent && 'id' in resultEvent ? resultEvent.id : undefined);
+
+      if (!initialEvent && !eventId) {
+        throw new Error('Event ID missing after create');
+      }
       
-      // Step 2: Upload photos if any were selected
-      if (photos.length > 0) {
-        const eventId = initialEvent?.id || (resultEvent?.id);
-        
-        if (eventId) {
-          setIsUploadingPhotos(true);
-          try {
-            // Upload photos sequentially to avoid overwhelming the server
-            for (const photo of photos) {
-              const uploaded = await photoService.uploadPhoto(eventId, photo);
-              // If editing existing event, update local state immediately
-              if (initialEvent) {
-                setExistingPhotos(prev => [...prev, uploaded.photo]);
-              }
+      if (photos.length > 0 && eventId) {
+        setIsUploadingPhotos(true);
+        try {
+          for (const photo of photos) {
+            const uploaded = await photoService.uploadPhoto(eventId, photo);
+            if (initialEvent) {
+              setExistingPhotos(prev => [...prev, uploaded.photo]);
             }
-            // Refresh events after photos are uploaded to show them immediately
-            if (onRefreshEvents) {
-              await onRefreshEvents();
-            }
-          } catch (photoError) {
-            console.error('Error uploading photos:', photoError);
-            // Don't fail the entire operation if photo upload fails
-            const action = initialEvent ? 'updated' : 'created';
-            alert(`Event ${action}, but some photos failed to upload. You can add them later.`);
-          } finally {
-            setIsUploadingPhotos(false);
           }
+          if (onRefreshEvents) {
+            try {
+              await onRefreshEvents();
+            } catch (refreshError) {
+              console.error('Failed to refresh events after upload:', refreshError);
+              setFormError('Photos uploaded, but refreshing events failed. Try reloading.');
+            }
+          }
+        } catch (photoError) {
+          console.error('Error uploading photos:', photoError);
+          const action = initialEvent ? 'updated' : 'created';
+          setFormError(`Event ${action}, but some photos failed to upload. You can add them later.`);
+        } finally {
+          setIsUploadingPhotos(false);
         }
       }
       
       onClose();
     } catch (error) {
-      // Error is handled by the parent component
+      console.error('Failed to submit event:', error);
+      setFormError('Failed to save event. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -165,11 +187,13 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
   const handleDelete = async () => {
     if (initialEvent && onDelete) {
       try {
+        setFormError(null);
         setIsLoading(true);
         await onDelete(initialEvent.id);
         onClose();
       } catch (error) {
-        // Error is handled by the parent component
+        console.error('Failed to delete event:', error);
+        setFormError('Failed to delete event. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -177,20 +201,23 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
   };
 
   const handleCreateEventTypeSuccess = (newEventType: EventType) => {
-    // Automatically select the new event type
     setFormData(prev => ({
       ...prev,
       event_type_id: newEventType.id,
       type: newEventType.name
     }));
     
-    // Refresh event types in the parent component
     if (onRefreshEventTypes) {
-      onRefreshEventTypes();
+      try {
+        onRefreshEventTypes();
+      } catch (error) {
+        console.error('Failed to refresh event types:', error);
+        setFormError('Created type, but failed to refresh the type list.');
+      }
     }
   };
 
-  const isActionDisabled = isLoading || isUploadingPhotos || isManagingPhotos;
+  const isActionDisabled = isLoading || isUploadingPhotos || isManagingPhotos || isCompressingUploads;
 
   if (!isOpen) return null;
 
@@ -200,6 +227,11 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
         <h2 className="text-white text-xl font-semibold mb-4">
           {initialEvent ? 'Update Event' : 'Create New Event'}
         </h2>
+        {formError && (
+          <div className="mb-4 bg-red-900/50 border border-red-600 text-red-200 px-3 py-2 rounded text-sm">
+            {formError}
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-white mb-1">Name</label>
@@ -337,6 +369,8 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
             onPhotosChange={setPhotos}
             maxPhotos={10}
             maxFileSize={10 * 1024 * 1024} // 10MB
+            compressionOptions={{ maxWidth: 1800, maxHeight: 1800, quality: 0.85, maxOutputSizeBytes: 8 * 1024 * 1024 }}
+            onCompressingChange={setIsCompressingUploads}
           />
           
           <div className="flex flex-col sm:flex-row justify-between space-y-2 sm:space-y-0 sm:space-x-3">

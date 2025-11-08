@@ -13,33 +13,29 @@ interface TimelineContainerProps {
 }
 
 const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
-
-  
   const [selectedTypeIds, setSelectedTypeIds] = useState<string[]>([]);
   const [userEvents, setUserEvents] = useState<TimelineEvent[]>(events);
   const [error, setError] = useState<string | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
   const [showCreateEventTypeModal, setShowCreateEventTypeModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [selectedEventType, setSelectedEventType] = useState<{ id: string; displayName: string } | null>(null);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
 
   const fetchEvents = async () => {
     try {
       setIsLoading(true);
-      
       if (!sessionId) {
         throw new Error('No user ID available');
       }
-      
-      // Use API endpoint instead of direct Supabase query to ensure proper authentication
+
       const eventsResponse = await fetch('/api/events');
       if (!eventsResponse.ok) {
         throw new Error(`Failed to fetch events: ${eventsResponse.statusText}`);
       }
       const data = await eventsResponse.json();
-      
-      // Fetch event types separately for filters and form
+
       const response = await fetch('/api/event-types');
       if (!response.ok) {
         throw new Error(`Failed to fetch event types: ${response.statusText}`);
@@ -54,35 +50,28 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       setError(err instanceof Error ? err.message : 'Failed to fetch events');
     } finally {
       setIsLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
-  // Fetch events when sessionId is available
   useEffect(() => {
     if (sessionId) {
       fetchEvents();
     }
   }, [sessionId]);
 
-  // Memoize filtered events to prevent unnecessary recalculations
   const filteredEvents = useMemo(() => {
     return userEvents.filter(event => {
-      // Always include birth events
       if (event.event_types?.name === 'birth' || event.type === 'birth') {
         return true;
       }
-      
-      // If no event types are selected, show all events
       if (selectedTypeIds.length === 0) {
         return true;
       }
-      
-      // If event types are selected, only show events that match selected type IDs
       return selectedTypeIds.includes(event.event_type_id);
     });
   }, [selectedTypeIds, userEvents]);
 
-  // Update heading when selected event type changes
   useEffect(() => {
     const heading = document.getElementById('timeline-heading');
     if (heading) {
@@ -90,12 +79,15 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     }
   }, [selectedEventType]);
 
+  const handleRetry = () => {
+    fetchEvents();
+  };
+
   const handleCreateEvent = async (event: Omit<TimelineEvent, 'id'>): Promise<TimelineEvent> => {
     try {
       setIsLoading(true);
-      
       if (!sessionId) throw new Error('No user ID available');
-      
+
       const { data, error } = await supabase
         .from('events')
         .insert([{ ...event, user_id: sessionId }])
@@ -125,15 +117,14 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         .single();
 
       if (error) throw error;
-      
-      // Enrich photos with signed URLs if any exist
+
       if (data && data.event_photos && data.event_photos.length > 0) {
         const photosWithUrls = await Promise.all(
           data.event_photos.map(async (photo: any) => {
             const { data: urlData } = await supabase.storage
               .from('event-photos')
               .createSignedUrl(photo.file_path, 3600);
-            
+
             return {
               ...photo,
               url: urlData?.signedUrl || ''
@@ -265,15 +256,36 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && isInitialLoad) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-white">Loading...</div>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-gray-300">
+        <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <p>Loading your timeline…</p>
       </div>
     );
   }
 
-  if (!hasBirthEvent) {
+  if (error && !isInitialLoad) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full space-y-4">
+        <div className="text-white text-center">
+          <h2 className="text-xl font-semibold mb-2">Error: Failed to Load Timeline</h2>
+          <p className="text-gray-400">Please try again later or contact support.</p>
+        </div>
+        <button
+          onClick={handleRetry}
+          className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!hasBirthEvent && !error) {
     return (
       <div className="flex flex-col items-center justify-center h-full space-y-4">
         <div className="text-white text-center">
@@ -306,7 +318,34 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   return (
     <>
       <div className="w-full flex flex-col justify-center relative align-center sm:mb-24 md:mb-0">
-        <div className="mb-36 sm:mb-48 md:mb-36">
+        {error && (
+          <div className="max-w-4xl mx-auto mb-4 px-4">
+            <div className="bg-red-900/60 border border-red-600 text-red-200 px-4 py-3 rounded-lg flex items-center justify-between">
+              <div>
+                <p className="font-semibold">{error}</p>
+                <p className="text-sm text-red-200/80">Some actions may be unavailable until the timeline reloads.</p>
+              </div>
+              <button
+                onClick={handleRetry}
+                className="ml-4 bg-red-600/80 hover:bg-red-600 text-white px-3 py-2 rounded-md text-sm"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        )}
+        <div className="relative mb-36 sm:mb-48 md:mb-36">
+          {isLoading && !isInitialLoad && (
+            <div className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+              <div className="flex items-center space-x-3 text-gray-200">
+                <svg className="animate-spin h-6 w-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                <span className="text-sm">Updating timeline…</span>
+              </div>
+            </div>
+          )}
           <Timeline 
             events={filteredEvents} 
             eventTypes={eventTypes}

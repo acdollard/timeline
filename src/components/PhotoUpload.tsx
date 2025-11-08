@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { compressImage, type CompressionOptions } from '../utils/imageCompression';
 
 interface PhotoUploadProps {
@@ -7,6 +7,7 @@ interface PhotoUploadProps {
   maxPhotos?: number;
   maxFileSize?: number; // in bytes, default 10MB
   compressionOptions?: CompressionOptions;
+  onCompressingChange?: (isCompressing: boolean) => void;
 }
 
 interface PhotoPreview {
@@ -20,13 +21,20 @@ const PhotoUpload = ({
   onPhotosChange, 
   maxPhotos = 10,
   maxFileSize = 10 * 1024 * 1024, // 10MB default
-  compressionOptions
+  compressionOptions,
+  onCompressingChange
 }: PhotoUploadProps) => {
   const [previews, setPreviews] = useState<PhotoPreview[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCompressing, setIsCompressing] = useState(false);
+
+  useEffect(() => {
+    if (onCompressingChange) {
+      onCompressingChange(isCompressing);
+    }
+  }, [isCompressing, onCompressingChange]);
 
   // Convert File objects to previews
   React.useEffect(() => {
@@ -79,15 +87,13 @@ const PhotoUpload = ({
           continue;
         }
 
-        // Only attempt compression if image is larger than 0.3MB or exceeds limits
         if (file.size > 300 * 1024 || file.size > maxFileSize) {
           processedFile = await compressImage(file, {
-            maxOutputSizeBytes: maxFileSize * 0.9,
+            maxOutputSizeBytes: Math.min(maxFileSize * 0.9, maxFileSize),
             ...compressionOptions
           });
         }
 
-        // Revalidate after compression
         const postCompressionError = validateFile(processedFile);
         if (postCompressionError) {
           setError(postCompressionError);
@@ -109,46 +115,51 @@ const PhotoUpload = ({
   }, [photos, onPhotosChange, maxPhotos, maxFileSize, compressionOptions]);
 
   const removePhoto = (index: number) => {
+    if (isCompressing) return;
     const newPhotos = photos.filter((_, i) => i !== index);
     onPhotosChange(newPhotos);
     setError(null);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isCompressing) return;
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      addPhotos(files);
+      await addPhotos(files);
     }
-    // Reset input so same file can be selected again
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    if (isCompressing) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
+    if (isCompressing) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
+    if (isCompressing) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      addPhotos(files);
+      await addPhotos(files);
     }
   };
 
   const handleClick = () => {
+    if (isCompressing) return;
     fileInputRef.current?.click();
   };
 
@@ -179,12 +190,15 @@ const PhotoUpload = ({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={handleClick}
+          aria-busy={isCompressing}
+          aria-disabled={isCompressing}
           className={`
-            border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+            border-2 border-dashed rounded-lg p-6 text-center transition-colors relative
             ${isDragging 
               ? 'border-primary bg-primary/10' 
               : 'border-gray-600 hover:border-gray-500 bg-gray-700/50'
             }
+            ${isCompressing ? 'opacity-70 pointer-events-none cursor-wait' : 'cursor-pointer'}
           `}
         >
           <div className="flex flex-col items-center space-y-2">
@@ -208,6 +222,14 @@ const PhotoUpload = ({
               {photos.length} / {maxPhotos} photos • Max {formatFileSize(maxFileSize)} per file
             </p>
           </div>
+          {isCompressing && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg className="animate-spin h-6 w-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+            </div>
+          )}
         </div>
       )}
 
@@ -234,7 +256,8 @@ const PhotoUpload = ({
               <button
                 type="button"
                 onClick={() => removePhoto(index)}
-                className="absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                disabled={isCompressing}
+                className={`absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity ${isCompressing ? 'cursor-not-allowed opacity-60 group-hover:opacity-60' : ''}`}
                 aria-label="Remove photo"
               >
                 <svg
