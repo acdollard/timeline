@@ -350,9 +350,10 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
           onSubmit={handleCreateEvent}
           initialEvent={{
             event_type_id: birthEventType?.id || '', // Will be set when user selects birth type
-            name: '',
+            name: !hasBirthEvent ? 'Birth' : '',
             date: '',
-            description: ''
+            description: '',
+            type: !hasBirthEvent ? 'birth' : ''
           } as TimelineEvent}
           eventTypes={eventTypes}
           onRefreshEventTypes={fetchEvents}

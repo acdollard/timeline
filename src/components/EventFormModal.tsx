@@ -20,7 +20,7 @@ interface EventFormModalProps {
 
 const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eventTypes, onRefreshEventTypes, onRefreshEvents, isBirthEvent }: EventFormModalProps) => {
   const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>({
-    name: '',
+    name: isBirthEvent ? 'Birth' : '',
     date: '',
     event_type_id: '',
     type: '',
@@ -55,7 +55,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
     } else {
       // Reset form for new events
       setFormData({
-        name: '',
+        name: isBirthEvent ? 'Birth' : '',
         date: '',
         event_type_id: '',
         type: '',
@@ -238,16 +238,16 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
           </div>
           )}
           {isBirthEvent && (
-                      <div>
-                      <label className="block text-white mb-1">Event Name</label>
-                      <input
-                        type="text"
-                        value={"Birth"}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-gray-700 text-white rounded px-3 py-2"
-                        required
-                      />
-                    </div>
+              <div>
+              <label className="block text-white mb-1">Event Name</label>
+              <input
+                type="text"
+                value="Birth"
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full bg-gray-700 text-white rounded px-3 py-2"
+                required
+              />
+            </div>
           )}
           <div>
             <label className="block text-white mb-1">Date</label>
