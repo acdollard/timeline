@@ -15,10 +15,9 @@ interface EventFormModalProps {
   eventTypes: EventType[];
   onRefreshEventTypes?: () => void;
   onRefreshEvents?: () => void; // Callback to refresh events list after photo upload
-  isBirthEvent?: boolean;
 }
 
-const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eventTypes, onRefreshEventTypes, onRefreshEvents, isBirthEvent }: EventFormModalProps) => {
+const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eventTypes, onRefreshEventTypes, onRefreshEvents }: EventFormModalProps) => {
   const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>({
     name: '',
     date: '',
@@ -34,11 +33,20 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
   const [isCompressingUploads, setIsCompressingUploads] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [showCreateEventTypeModal, setShowCreateEventTypeModal] = useState(false);
-  const [birthEventType, setBirthEventType] = useState<EventType | null>(null);
 
+  // Set default event type if none is selected when modal opens
   useEffect(() => {
-    setBirthEventType(eventTypes.find((type: EventType) => type.name === 'birth') || null);
-  }, []);
+    if (isOpen && !formData.event_type_id && eventTypes.length > 0) {
+      const birthType = eventTypes.find((type: EventType) => type.name === 'birth');
+      if (birthType) {
+        setFormData(prev => ({ 
+          ...prev, 
+          event_type_id: birthType.id,
+          type: birthType.name
+        }));
+      }
+    }
+  }, [isOpen, eventTypes, formData.event_type_id]);
 
   useEffect(() => {
     if (initialEvent) {
@@ -217,7 +225,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
       <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md">
         <h2 className="text-white text-xl font-semibold mb-4">
-          {(initialEvent && !isBirthEvent) ? 'Update Event' : isBirthEvent ? 'When Were You Born?' : 'Create New Event'}
+          {initialEvent ? 'Update Event' : 'Create New Event'}
         </h2>
         {formError && (
           <div className="mb-4 bg-red-900/50 border border-red-600 text-red-200 px-3 py-2 rounded text-sm">
@@ -225,9 +233,8 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isBirthEvent && (
           <div>
-            <label className="block text-white mb-1">Event Name</label>
+            <label className="block text-white mb-1">Name</label>
             <input
               type="text"
               value={formData.name}
@@ -236,19 +243,6 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
               required
             />
           </div>
-          )}
-          {isBirthEvent && (
-                      <div>
-                      <label className="block text-white mb-1">Event Name</label>
-                      <input
-                        type="text"
-                        value={"Birth"}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full bg-gray-700 text-white rounded px-3 py-2"
-                        required
-                      />
-                    </div>
-          )}
           <div>
             <label className="block text-white mb-1">Date</label>
             <input
@@ -264,11 +258,6 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
             <select
               value={formData.event_type_id}
               onChange={(e) => {
-                if (e.target.value === 'create-custom') {
-                  setShowCreateEventTypeModal(true);
-                  return;
-                }
-                
                 const selectedType = eventTypes.find(type => type.id === e.target.value);
                 setFormData({ 
                   ...formData, 
@@ -280,21 +269,16 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
               required
             >
               <option value="">Select an event type</option>
-              {!isBirthEvent && eventTypes
-                .filter((type: EventType) => type.name !== 'birth')
+              {eventTypes
+                .filter((type: EventType) => type.name === 'birth')
                 .map((type: EventType) => (
                   <option key={type.id} value={type.id}>
                     {type.displayName}
                   </option>
                 ))}
-              {isBirthEvent && (
-                <option key={birthEventType?.id} value={birthEventType?.id}>
-                  {birthEventType?.displayName}
-                </option>
-              )}
             </select>
           </div>
-          {!isBirthEvent && <div>
+          <div>
             <label className="block text-white mb-1">Description</label>
             <textarea
               value={formData.description}
@@ -303,7 +287,6 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
               rows={3}
             />
           </div>
-          }
 
           {/* Existing Photos Section */}
           {initialEvent && existingPhotos.length > 0 && (
@@ -392,7 +375,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
                 ? 'Uploading photos...' 
                 : isLoading 
                   ? 'Saving...' 
-                  : (initialEvent && !isBirthEvent ? 'Update Event' : isBirthEvent ? 'Save' : 'Create Event')
+                  : (initialEvent ? 'Update Event' : 'Create Event')
               }
             </button>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 order-2 sm:order-2">

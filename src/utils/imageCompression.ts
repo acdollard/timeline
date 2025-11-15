@@ -127,3 +127,5 @@ export const compressImage = async (file: File, options: CompressionOptions = {}
     return file;
   }
 };
+
+

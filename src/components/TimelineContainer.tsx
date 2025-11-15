@@ -23,7 +23,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
   const [selectedEventType, setSelectedEventType] = useState<{ id: string; displayName: string } | null>(null);
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [deletingEventTypeId, setDeletingEventTypeId] = useState<string | null>(null);
-
+  const [birthEventType, setBirthEventType] = useState<EventType | null>(null);
   const fetchEvents = async () => {
     try {
       setIsLoading(true);
@@ -42,7 +42,18 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         throw new Error(`Failed to fetch event types: ${response.statusText}`);
       }
       const eventTypesData = await response.json();
-
+      const birthEventType = eventTypesData.find((type: EventType) => type.name === 'birth');
+      if (birthEventType) {
+        setBirthEventType({
+          id: birthEventType.id,
+          name: birthEventType.name,
+          displayName: birthEventType.display_name,
+          color: birthEventType.color,
+          icon: "",
+          isDefault: false,
+          isActive: true
+        });
+      }
       setUserEvents(data || []);
       setEventTypes(eventTypesData || []);
       setError(null);
@@ -338,13 +349,14 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
           onClose={() => setShowFormModal(false)}
           onSubmit={handleCreateEvent}
           initialEvent={{
-            event_type_id: '', // Will be set when user selects birth type
+            event_type_id: birthEventType?.id || '', // Will be set when user selects birth type
             name: '',
             date: '',
             description: ''
           } as TimelineEvent}
           eventTypes={eventTypes}
           onRefreshEventTypes={fetchEvents}
+          isBirthEvent={true}
         />
       </div>
     );
