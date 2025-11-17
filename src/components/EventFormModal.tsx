@@ -214,8 +214,8 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
-      <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn p-4">
+      <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <h2 className="text-white text-xl font-semibold mb-4">
           {(initialEvent && !isBirthEvent) ? 'Update Event' : isBirthEvent ? 'When Were You Born?' : 'Create New Event'}
         </h2>
