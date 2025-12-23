@@ -1,0 +1,195 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { supabase } from "../lib/supabase";
+
+const { cookies, redirect, request } = Astro;
+
+// Get URL parameters
+const url = new URL(request.url);
+const access_token = url.searchParams.get("access_token");
+const refresh_token = url.searchParams.get("refresh_token");
+const error = url.searchParams.get("error");
+const success = url.searchParams.get("success");
+
+// Check if we have tokens in the hash fragment (client-side)
+const hasHashTokens = url.hash.includes("access_token");
+
+// If no tokens in query params but we have hash tokens, let client-side handle it
+// If no tokens at all, redirect to signin
+if (!access_token || !refresh_token) {
+  if (!hasHashTokens) {
+    return redirect("/signin?error=invalid_confirmation_link");
+  }
+  // If we have hash tokens, continue to render the page with client-side script
+}
+
+// Set the session with the tokens from the email (only if we have query params)
+let session = null;
+let sessionError = null;
+let isConfirmed = false;
+
+if (access_token && refresh_token) {
+  const sessionResult = await supabase.auth.setSession({
+    access_token,
+    refresh_token,
+  });
+  session = sessionResult.data.session;
+  sessionError = sessionResult.error;
+  
+  // If session is set successfully, email is confirmed
+  if (session && !sessionError) {
+    isConfirmed = true;
+    
+    // Set cookies for persistent session
+    cookies.set("sb-access-token", access_token, {
+      path: "/",
+      secure: true,
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+    });
+    
+    cookies.set("sb-refresh-token", refresh_token, {
+      path: "/",
+      secure: true,
+      httpOnly: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+    });
+  }
+}
+
+// If we have hash tokens but no query tokens, let client-side handle the session
+// If we have query tokens but session failed, show error
+if (access_token && refresh_token && (sessionError || !session)) {
+  // Don't redirect, show error message instead
+}
+
+// Helper function to get error message
+const getErrorMessage = (error: string | null) => {
+  switch (error) {
+    case "invalid_confirmation_link":
+      return "Invalid or expired confirmation link. Please request a new confirmation email.";
+    case "session_error":
+      return "Failed to confirm your email. Please try again or contact support.";
+    default:
+      return "An error occurred while confirming your email. Please try again.";
+  }
+};
+
+// Helper function to get success message
+const getSuccessMessage = (success: string | null) => {
+  switch (success) {
+    case "email_confirmed":
+      return "Email confirmed successfully! Redirecting to your timeline...";
+    default:
+      return "Email confirmed successfully!";
+  }
+};
+---
+
+<Layout title="Confirm Email">
+  <div
+    class="flex flex-col items-center justify-center h-screen bg-darkestGray"
+  >
+    <div
+      class="bg-gray-800 rounded-lg flex flex-col items-center justify-center gap-4 w-full max-w-md p-8 text-white"
+    >
+      <h1 class="text-2xl font-bold">Confirming Your Email</h1>
+      
+      {isConfirmed ? (
+        <>
+          <div class="w-full p-3 bg-green-500/10 border border-green-500/20 rounded-md">
+            <p class="text-sm text-green-400">
+              {getSuccessMessage("email_confirmed")}
+            </p>
+          </div>
+          <p class="text-sm text-gray-400 text-center">
+            Your email has been confirmed and you're now signed in. You'll be redirected shortly.
+          </p>
+          <a
+            href="/"
+            class="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors text-center"
+          >
+            Go to Timeline
+          </a>
+        </>
+      ) : (error || sessionError) ? (
+        <>
+          <div class="w-full p-3 bg-red-500/10 border border-red-500/20 rounded-md">
+            <p class="text-sm text-red-400">
+              {getErrorMessage(error || (sessionError ? "session_error" : null))}
+            </p>
+          </div>
+          <div class="flex flex-col items-center gap-2 w-full">
+            <a
+              href="/signin"
+              class="text-sm text-primary hover:text-primary/90 transition-colors"
+            >
+              Back to Sign In
+            </a>
+            <p class="text-sm text-gray-400">
+              Need help?
+              <a href="/register" class="text-primary hover:text-primary/90 ml-1"
+                >Create a new account</a
+              >
+            </p>
+          </div>
+        </>
+      ) : (
+        <>
+          <div class="w-full p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+            <p class="text-sm text-blue-400">
+              Processing your email confirmation...
+            </p>
+          </div>
+          <p class="text-sm text-gray-400 text-center">
+            Please wait while we confirm your email address.
+          </p>
+        </>
+      )}
+    </div>
+  </div>
+
+  {hasHashTokens && (
+    <script>
+      // Extract tokens from hash fragment and redirect to confirm-email with query params
+      const hash = window.location.hash.substring(1); // Remove the #
+      const params = new URLSearchParams(hash);
+      
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+      const type = params.get('type');
+      
+      if (accessToken && refreshToken) {
+        // Only process if this is a signup confirmation (type=signup)
+        // If it's a recovery token, redirect to reset-password instead
+        if (type === 'recovery') {
+          const newUrl = new URL('/reset-password', window.location.origin);
+          newUrl.searchParams.set('access_token', accessToken);
+          newUrl.searchParams.set('refresh_token', refreshToken);
+          window.location.href = newUrl.toString();
+        } else {
+          // This is an email confirmation, redirect to confirm-email with tokens
+          const newUrl = new URL('/confirm-email', window.location.origin);
+          newUrl.searchParams.set('access_token', accessToken);
+          newUrl.searchParams.set('refresh_token', refreshToken);
+          window.location.href = newUrl.toString();
+        }
+      } else {
+        // If no tokens in hash, redirect to signin
+        window.location.href = '/signin?error=invalid_confirmation_link';
+      }
+    </script>
+  )}
+
+  {isConfirmed && (
+    <script>
+      // Auto-redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    </script>
+  )}
+</Layout>
+

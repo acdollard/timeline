@@ -4,10 +4,11 @@ import { supabase } from "../lib/supabase";
 
 const { cookies, redirect, request } = Astro;
 
-// Check if there's an error in the URL
+// Check if there's an error or message in the URL
 const url = new URL(request.url);
 const error = url.searchParams.get("error");
 const success = url.searchParams.get("success");
+const message = url.searchParams.get("message");
 
 // Get tokens from cookies
 const accessToken = cookies.get("sb-access-token");
@@ -58,6 +59,16 @@ const getSuccessMessage = (success: string | null) => {
       return "Operation completed successfully!";
   }
 };
+
+// Helper function to get info message
+const getInfoMessage = (message: string | null) => {
+  switch (message) {
+    case "check_email":
+      return "Please check your email to confirm your account. Click the link in the email to complete registration.";
+    default:
+      return null;
+  }
+};
 ---
 
 <Layout title="Sign in">
@@ -84,6 +95,14 @@ const getSuccessMessage = (success: string | null) => {
         success && (
           <div class="w-full p-3 bg-green-500/10 border border-green-500/20 rounded-md">
             <p class="text-sm text-green-400">{getSuccessMessage(success)}</p>
+          </div>
+        )
+      }
+
+      {
+        message && getInfoMessage(message) && (
+          <div class="w-full p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+            <p class="text-sm text-blue-400">{getInfoMessage(message)}</p>
           </div>
         )
       }
