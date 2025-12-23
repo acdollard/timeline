@@ -227,3 +227,34 @@ import Layout from "../layouts/Layout.astro";
   // Start the rotation
   startRotation();
 </script>
+
+<!-- Handle authentication tokens from email links (if Site URL is set to root) -->
+<script>
+  // Check for hash tokens on page load (from Supabase email links)
+  if (window.location.hash && window.location.hash.includes("access_token")) {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+    const type = params.get("type");
+
+    if (accessToken && refreshToken) {
+      if (type === "recovery") {
+        // Password reset token - redirect to reset-password
+        const newUrl = new URL("/reset-password", window.location.origin);
+        newUrl.searchParams.set("access_token", accessToken);
+        newUrl.searchParams.set("refresh_token", refreshToken);
+        window.location.href = newUrl.toString();
+      } else if (type === "signup") {
+        // Email confirmation token - redirect to confirm-email
+        const newUrl = new URL("/confirm-email", window.location.origin);
+        newUrl.searchParams.set("access_token", accessToken);
+        newUrl.searchParams.set("refresh_token", refreshToken);
+        window.location.href = newUrl.toString();
+      }
+      // If type is unknown or missing, just clear the hash and stay on the page
+      // (might be a legitimate user just visiting the site)
+    }
+  }
+</script>
