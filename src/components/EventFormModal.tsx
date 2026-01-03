@@ -408,7 +408,16 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
               )}
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  setFormData({
+                    name: '',
+                    date: '',
+                    event_type_id: '',
+                    type: '',
+                    description: ''
+                  });
+                  onClose();
+                }}
                 disabled={isActionDisabled}
                 className="bg-gray-600 text-white px-4 py-3 sm:py-2 rounded hover:bg-gray-700 disabled:opacity-50 text-center"
               >
