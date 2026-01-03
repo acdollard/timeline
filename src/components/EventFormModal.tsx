@@ -166,7 +166,15 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
           setIsUploadingPhotos(false);
         }
       }
-      
+      setFormData({
+        name: '',
+        date: '',
+        event_type_id: '',
+        type: '',
+        description: ''
+      });
+      setExistingPhotos([]);
+      setPhotos([]);
       onClose();
     } catch (error) {
       console.error('Failed to submit event:', error);
