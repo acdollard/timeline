@@ -12,9 +12,10 @@ interface PinProps {
   handleClick: (event: TimelineEvent) => void;
   isMobile?: boolean;
   index: number | 0;
+  height: number;
 }
 
-const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile, index }) => {
+const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile, index, height }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const formattedDate = useMemo(() => {
     return new Date(event.date).toLocaleDateString('en-US', {
@@ -26,10 +27,9 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile
 
   // Temporarily disabled GSAP animation to debug pin visibility
   useGSAP(() => {
-
     if (!isMobile) {
       gsap.to(`.shaft-${event.id}`, {
-        height: 90,
+        height: height,
         width: 0.5,
         duration: 0.2,
         ease: 'power2.inOut',
@@ -37,7 +37,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile
     } else {
       gsap.to(`.shaft-${event.id}`, {
         height: 0.5,
-        width: 90,
+        width: height,
         duration: 0.2,
         ease: 'power2.inOut',
       })
@@ -52,6 +52,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile
     // Fall back to legacy type-based color
     return getPinColor(event.type || 'birth');
   };
+
 
   const tooltipClasses = !isMobile 
     ? "absolute md:-translate-x-1/2 md:-top-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap z-10"

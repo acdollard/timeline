@@ -46,9 +46,6 @@ const Timeline = ({
     const checkScreenSize = () => {
       const mobile = window.innerWidth < 768; // md breakpoint
       setIsMobile(mobile);
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Screen size detected:', mobile ? 'mobile' : 'desktop', 'width:', window.innerWidth);
-      }
     };
     
     checkScreenSize();
@@ -70,10 +67,6 @@ const Timeline = ({
     const today = new Date();
     return Math.ceil((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
   }, [birthDate]);
-
-  const totalYears = useMemo(() => {
-    return Math.ceil(totalDays / 365);
-  }, [totalDays]);
 
   // Calculate year marker positions based on actual days
   const yearMarkers = useMemo(() => {
@@ -110,6 +103,68 @@ const Timeline = ({
       return { ...item, position };
     });
   }, [events, birthDate, totalDays]);
+
+  const eventsWithPositionAndHeight = useMemo(() => {
+    const range = 180; // 6 months / 180 days
+    const oneDay = 1000 * 60 * 60 * 24; // 1 day in milliseconds
+    const minHeight = 30;
+    const defaultHeight = 90;
+    const heightIncrement = 30;
+    
+    // First pass: identify clusters
+    const clusters: number[][] = [];
+    let currentCluster: number[] = [];
+    
+    for (let i = 0; i < eventsWithPosition.length; i++) {
+      const currentDate = new Date(eventsWithPosition[i].date).getTime();
+      
+      if (currentCluster.length === 0) {
+        // Start a new cluster
+        currentCluster = [i];
+      } else {
+        // Check if current event is within range of the LAST event in the current cluster
+        const lastInClusterIndex = currentCluster[currentCluster.length - 1];
+        const lastInClusterDate = new Date(eventsWithPosition[lastInClusterIndex].date).getTime();
+        const daysBetween = Math.ceil((currentDate - lastInClusterDate) / oneDay);
+        
+        if (daysBetween <= range) {
+          // Add to current cluster
+          currentCluster.push(i);
+          console.log(currentCluster);
+        } else {
+          // Current cluster is complete, start a new one
+          clusters.push(currentCluster);
+          currentCluster = [i];
+          console.log(clusters);
+        }
+      }
+    }
+    
+    // Don't forget the last cluster
+    if (currentCluster.length > 0) {
+      clusters.push(currentCluster);
+    }
+    
+    // Second pass: assign heights based on cluster membership and position
+    return eventsWithPosition.map((item, index) => {
+      // Find which cluster this event belongs to
+      const clusterIndex = clusters.findIndex(cluster => cluster.includes(index));
+      
+      if (clusters[clusterIndex].length === 1) {
+        console.log(item);
+        // Not part of any cluster
+        return {...item, height: defaultHeight};
+      }
+      
+      const cluster = clusters[clusterIndex];
+      const positionInCluster = cluster.indexOf(index);
+      
+      // Each event in cluster gets a different height: minHeight + (position * increment)
+      const height = minHeight + (positionInCluster * heightIncrement);
+      
+      return {...item, height: height};
+    });
+  }, [eventsWithPosition]);
 
   const handlePinClick = (event: TimelineEvent) => {
     setSelectedEvent(event);
@@ -157,7 +212,7 @@ const Timeline = ({
         {/* Desktop Timeline */}
         {!isMobile && (
           <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
-            {eventsWithPosition.map((item, index) => (
+            {eventsWithPositionAndHeight.map((item, index) => (
               <div 
                 key={item.id}
                 className={`flex flex-col h-auto absolute ${
@@ -168,7 +223,7 @@ const Timeline = ({
                 ${index !== 0 && index % 2 === 0 ? "rotate-180 origin-bottom" : ""}`}
                 style={{ left: `${item.position}%`}}
               >
-                <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} isMobile={false} index={index} />
+                <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} isMobile={false} index={index} height={item.height}/>
               </div>
             ))}
             {yearMarkers.map((marker) => (
@@ -222,7 +277,7 @@ const Timeline = ({
             ))}
             
             {/* Pins */}
-            {eventsWithPosition.map((item, index) => (
+            {eventsWithPositionAndHeight.map((item, index) => (
               <div 
                 key={item.id}
                 className="absolute"
@@ -231,7 +286,7 @@ const Timeline = ({
                   left: isBirthEvent(item) ? '4px' : '8px'
                 }}
               >
-                <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} isMobile={true} index={index} />
+                <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} isMobile={true} index={index} height={item.height}/>
               </div>
             ))}
           </div>

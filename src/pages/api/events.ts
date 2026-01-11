@@ -81,7 +81,6 @@ export const GET: APIRoute = async ({ params }) => {
         data.photos = [];
       }
 
-      console.log('Successfully fetched event:', data)
       return new Response(JSON.stringify(data), {
         status: 200,
         headers: {
@@ -91,7 +90,6 @@ export const GET: APIRoute = async ({ params }) => {
     }
 
     // Get all events for the authenticated user
-    console.log('Fetching all events from Supabase...');
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       return new Response(JSON.stringify({ error: 'No authenticated user' }), {
@@ -147,7 +145,6 @@ export const GET: APIRoute = async ({ params }) => {
       })
     );
 
-    console.log('Successfully fetched events:', eventsWithPhotos);
     return new Response(JSON.stringify(eventsWithPhotos), {
       status: 200,
       headers: {
