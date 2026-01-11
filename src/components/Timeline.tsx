@@ -102,12 +102,11 @@ const Timeline = ({
 
   // Calculate position for each event
   const eventsWithPosition = useMemo(() => {
-    return events.map(item => {
+    return events.map((item, i) => {
       const eventDate = new Date(item.date);
       const daysSinceBirth = Math.ceil((eventDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
       const position = (daysSinceBirth / totalDays) * 100;
-      
-      
+
       return { ...item, position };
     });
   }, [events, birthDate, totalDays]);
@@ -163,7 +162,7 @@ const Timeline = ({
                 key={item.id}
                 className={`flex flex-col h-auto absolute ${
                   isBirthEvent(item)
-                    ? "-translate-y-2.5"
+                    ? ""
                     : "-translate-y-full"
                 }
                 ${index !== 0 && index % 2 === 0 ? "rotate-180 origin-bottom" : ""}`}
