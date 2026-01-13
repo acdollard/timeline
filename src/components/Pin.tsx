@@ -55,8 +55,8 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile
 
 
   const tooltipClasses = !isMobile 
-    ? "absolute md:-translate-x-1/2 md:-top-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap z-10"
-    : "absolute left-12 top-1/2 -translate-y-1/2 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm max-w-[80vw] w-[500px] whitespace-normal z-10";
+    ? "absolute md:-translate-x-1/2 md:-top-16 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap"
+    : "absolute left-12 top-1/2 -translate-y-1/2 bg-gray-900 border border-gray-700 shadow-lg text-white px-3 py-2 rounded-lg text-sm max-w-[80vw] w-[500px] whitespace-normal";
 
   return (
     <>

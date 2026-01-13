@@ -212,29 +212,15 @@ const Timeline = ({
         {/* Desktop Timeline */}
         {!isMobile && (
           <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
-            {eventsWithPositionAndHeight.map((item, index) => (
-              <div 
-                key={item.id}
-                className={`flex flex-col h-auto absolute ${
-                  isBirthEvent(item)
-                    ? ""
-                    : "-translate-y-full"
-                }
-                ${index !== 0 && index % 2 === 0 ? "rotate-180 origin-bottom" : ""}`}
-                style={{ left: `${item.position}%`}}
-              >
-                <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} isMobile={false} index={index} height={item.height}/>
-              </div>
-            ))}
             {yearMarkers.map((marker) => (
               <React.Fragment key={marker.year}>
                 <div
-                  className="w-0.5 h-4 bg-white absolute"
+                  className="w-0.5 h-4 bg-white absolute z-10"
                   style={{ left: `${marker.position}%` }}
                 />
                 {marker.year % 5 === 0 && (
                   <div 
-                    className="absolute top-6 text-white text-xs bg-gray-900"
+                    className="absolute top-6 text-white text-xs bg-gray-900 z-10"
                     style={{ 
                       left: `${marker.position}%`,
                       transform: 'translateX(-50%)'
@@ -244,6 +230,20 @@ const Timeline = ({
                   </div>
                 )}
               </React.Fragment>
+            ))}
+            {eventsWithPositionAndHeight.map((item, index) => (
+              <div 
+                key={item.id}
+                className={`flex flex-col h-auto absolute z-20 ${
+                  isBirthEvent(item)
+                    ? ""
+                    : "-translate-y-full"
+                }
+                ${index !== 0 && index % 2 === 0 ? "rotate-180 origin-bottom" : ""}`}
+                style={{ left: `${item.position}%`}}
+              >
+                <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} isMobile={false} index={index} height={item.height}/>
+              </div>
             ))}
           </div>
         )}
@@ -258,13 +258,13 @@ const Timeline = ({
             {yearMarkers.map((marker) => (
               <React.Fragment key={marker.year}>
                 <div
-                  className="h-1 w-2 bg-white absolute left-8"
+                  className="h-1 w-2 bg-white absolute left-8 z-10"
                   style={{ top: `${marker.position}%` }}
                 />
 
                 {marker.year % 5 === 0 && (
                   <div 
-                    className="absolute left-6 text-white text-xs bg-gray-900 px-2 py-1 rounded"
+                    className="absolute left-6 text-white text-xs bg-gray-900 px-2 py-1 rounded z-10"
                     style={{ 
                       top: `${marker.position}%`,
                       transform: 'translateY(-50%) translateX(-180%)'
@@ -280,7 +280,7 @@ const Timeline = ({
             {eventsWithPositionAndHeight.map((item, index) => (
               <div 
                 key={item.id}
-                className="absolute"
+                className="absolute z-20"
                 style={{ 
                   top: `${item.position}%`,
                   left: isBirthEvent(item) ? '4px' : '8px'

@@ -33,7 +33,7 @@ const Navbar = ({ initialSession }: NavbarProps) => {
         <li><a href="/about" className="hover:text-primary transition-colors">About</a></li>
         {session ? (
           <>
-            <li><a href="/summary" className="hover:text-primary transition-colors">My Timeline</a></li>
+            <li><a href="/summary" className="hover:text-primary transition-colors">Summary Page</a></li>
             <li>
               <button 
                 onClick={() => {
