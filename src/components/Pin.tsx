@@ -70,7 +70,7 @@ const Pin: React.FC<PinProps> = ({ event, isBirth = false, handleClick, isMobile
         }}
       >
          <div
-          className={`event rounded-full transition-all duration-200 absolute cursor-pointer ${isMobile ? 'h-8 w-8' : 'h-6 w-6'}`}
+          className={`event rounded-full transition-all duration-200 absolute cursor-pointer ${isMobile ? 'h-6 w-6' : 'h-4 w-4'}`}
           style={{ 
             backgroundColor: getEventColor(),
             left: !isMobile ? '50%' : '0px',
