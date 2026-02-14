@@ -208,7 +208,7 @@ const Timeline = ({
       <div className="timeline-container flex flex-col h-auto">
         {/* Desktop Timeline */}
         {!isMobile && (
-          <div id="timeline-line" className="bg-white h-1 flex flex-row relative">
+          <div id="timeline-line" className="desktop-timeline bg-white h-1 flex flex-row relative">
             {yearMarkers.map((marker) => (
               <React.Fragment key={marker.year}>
                 <div
@@ -247,7 +247,7 @@ const Timeline = ({
 
         {/* Mobile Timeline */}
         {isMobile && (
-          <div className="flex flex-col relative h-screen mx-8 pb-20">
+          <div className="mobile-timeline relative h-[90vh]">
             {/* Timeline Line */}
             <div className="w-1 bg-white h-full absolute left-8"></div>
             

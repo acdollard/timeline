@@ -412,7 +412,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         </div>
       </div>
 
-      <div className="w-full flex flex-col justify-end relative z-20">     
+      <div className="w-full relative z-20">     
         <TimelineFilters
           eventTypes={eventTypes}
           onFilterChange={handleFilterChange}

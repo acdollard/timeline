@@ -80,7 +80,7 @@ const TimelineFilters = ({ eventTypes, onFilterChange, onAddClick, onAddEventTyp
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 transition-all duration-300 ease-in-out"
          style={{ 
-           height: isExpanded ? (isMobile ? '70vh' : 'auto') : isMobile ? '3rem' : '4rem',
+           height: isExpanded ? (isMobile ? '70vh' : 'auto') : isMobile ? '8rem' : '4rem',
            overflow: 'hidden'
          }}>
       <div className="max-w-screen-xl mx-auto h-full flex flex-col">
