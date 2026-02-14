@@ -130,12 +130,10 @@ const Timeline = ({
         if (daysBetween <= range) {
           // Add to current cluster
           currentCluster.push(i);
-          console.log(currentCluster);
         } else {
           // Current cluster is complete, start a new one
           clusters.push(currentCluster);
           currentCluster = [i];
-          console.log(clusters);
         }
       }
     }
@@ -151,7 +149,6 @@ const Timeline = ({
       const clusterIndex = clusters.findIndex(cluster => cluster.includes(index));
       
       if (clusters[clusterIndex].length === 1) {
-        console.log(item);
         // Not part of any cluster
         return {...item, height: defaultHeight};
       }

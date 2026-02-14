@@ -382,7 +382,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
             </div>
           </div>
         )}
-        <div className="relative mb-36 sm:mb-48 md:mb-36">
+        <div className="relative mb-36 sm:mb-48 md:mb-36 z-10">
           {isLoading && !isInitialLoad && (
             <div className="absolute inset-0 bg-gray-900/70 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
               <div className="flex items-center space-x-3 text-gray-200">
@@ -412,7 +412,7 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         </div>
       </div>
 
-      <div className="w-full flex flex-col justify-end relative">     
+      <div className="w-full flex flex-col justify-end relative z-20">     
         <TimelineFilters
           eventTypes={eventTypes}
           onFilterChange={handleFilterChange}
