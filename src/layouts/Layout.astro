@@ -18,6 +18,7 @@ const {
 
 const accessToken = Astro.cookies.get("sb-access-token");
 const refreshToken = Astro.cookies.get("sb-refresh-token");
+const currentPath = Astro.url.pathname;
 
 let session = null;
 if (accessToken && refreshToken) {
@@ -47,7 +48,7 @@ if (requireAuth && !session) {
     <title>{title}</title>
   </head>
   <body class="bg-gray-900 min-h-screen">
-    <Navbar client:load initialSession={session} />
+    <Navbar client:load initialSession={session} currentPath={currentPath} />
     {showBackButton && <BackButton client:load />}
     <main>
       <slot />

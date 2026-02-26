@@ -3,9 +3,10 @@ import type { Session } from '@supabase/supabase-js';
 
 interface NavbarProps {
   initialSession: Session | null;
+  currentPath: string;
 }
 
-const Navbar = ({ initialSession }: NavbarProps) => {
+const Navbar = ({ initialSession, currentPath }: NavbarProps) => {
   const [session, setSession] = useState<Session | null>(initialSession);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -33,7 +34,7 @@ const Navbar = ({ initialSession }: NavbarProps) => {
         <li><a href="/about" className="hover:text-primary transition-colors">About</a></li>
         {session ? (
           <>
-            <li><a href="/summary" className="hover:text-primary transition-colors">Summary Page</a></li>
+            <li><a href="/summary" className={`hover:text-primary transition-colors ${currentPath === '/summary' ? 'hidden' : ''}`}>Summary Page</a></li>
             <li>
               <button 
                 onClick={() => {

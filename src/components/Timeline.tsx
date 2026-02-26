@@ -247,45 +247,57 @@ const Timeline = ({
 
         {/* Mobile Timeline */}
         {isMobile && (
-          <div className="mobile-timeline relative h-[90vh]">
-            {/* Timeline Line */}
-            <div className="w-1 bg-white h-full absolute left-8"></div>
-            
-            {/* Year Markers */}
-            {yearMarkers.map((marker) => (
-              <React.Fragment key={marker.year}>
-                <div
-                  className="h-1 w-2 bg-white absolute left-8 z-10"
-                  style={{ top: `${marker.position}%` }}
-                />
-
-                {marker.year % 5 === 0 && (
-                  <div 
-                    className="absolute left-6 text-white text-xs bg-gray-900 px-2 py-1 rounded z-10"
-                    style={{ 
+          <div className="mobile-timeline relative h-[95vh] grid grid-cols-8 mt-4">
+            {/* Year Labels - Column 1, fixed to left side (mobile only) */}
+            <div className="col-span-1 sticky left-0 z-10 h-full">
+              {yearMarkers
+                .filter((marker) => marker.year % 5 === 0)
+                .map((marker) => (
+                  <div
+                    key={marker.year}
+                    className="absolute left-0 text-white text-xs bg-gray-900 px-2 py-1 rounded"
+                    style={{
                       top: `${marker.position}%`,
-                      transform: 'translateY(-50%) translateX(-180%)'
+                      transform: 'translateY(-50%)',
                     }}
                   >
                     {marker.year}
                   </div>
-                )}
-              </React.Fragment>
-            ))}
-            
-            {/* Pins */}
-            {eventsWithPositionAndHeight.map((item, index) => (
-              <div 
-                key={item.id}
-                className="absolute z-20"
-                style={{ 
-                  top: `${item.position}%`,
-                  left: isBirthEvent(item) ? '4px' : '8px'
-                }}
-              >
-                <Pin event={item} isBirth={isBirthEvent(item)} handleClick={handlePinClick} isMobile={true} index={index} height={item.height}/>
-              </div>
-            ))}
+                ))}
+            </div>
+
+            {/* Timeline content - Columns 2-7, centered */}
+            <div className="col-span-7 col-start-2 relative h-full">
+              {/* Timeline Line */}
+              <div className="mobile-timeline-line w-1 bg-white h-full absolute left-1/2 -translate-x-1/2 z-10" />
+              {/* Year Marker Ticks */}
+              {yearMarkers.map((marker) => (
+                <div
+                  key={marker.year}
+                  className="h-1 w-2 bg-white absolute left-1/2 -translate-x-1/2 z-10"
+                  style={{ top: `${marker.position}%` }}
+                />
+              ))}
+              {/* Pins */}
+              {eventsWithPositionAndHeight.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="absolute z-20 left-1/2 -translate-x-1/3"
+                  style={{
+                    top: `${item.position}%`,
+                  }}
+                >
+                  <Pin
+                    event={item}
+                    isBirth={isBirthEvent(item)}
+                    handleClick={handlePinClick}
+                    isMobile={true}
+                    index={index}
+                    height={item.height}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
