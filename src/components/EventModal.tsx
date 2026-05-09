@@ -51,7 +51,10 @@ const EventModal: React.FC<EventModalProps> = ({ event, isOpen, onClose, onUpdat
   };
 
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center p-4 z-50 animate-fadeIn overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black/75 flex items-center justify-center p-4 animate-fadeIn overflow-y-auto"
+      style={{ zIndex: 'var(--z-modal)' }}
+    >
       <div className="bg-gray-800 rounded-lg max-w-4xl w-full mx-auto relative my-8 shadow-2xl">
         {/* Close Button */}
         <button

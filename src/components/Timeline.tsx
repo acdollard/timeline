@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import Pin from './Pin';
+import Pin, { type MobilePinLane } from './Pin';
 import EventModal from './EventModal';
 import EventFormModal from './EventFormModal';
 import type { TimelineEvent } from '../types/events';
@@ -148,9 +148,8 @@ const Timeline = ({
       // Find which cluster this event belongs to
       const clusterIndex = clusters.findIndex(cluster => cluster.includes(index));
       
-      if (clusters[clusterIndex].length === 1) {
-        // Not part of any cluster
-        return {...item, height: defaultHeight};
+      if (clusterIndex === -1 || clusters[clusterIndex].length === 1) {
+        return { ...item, height: defaultHeight };
       }
       
       const cluster = clusters[clusterIndex];
@@ -162,6 +161,60 @@ const Timeline = ({
       return {...item, height: height};
     });
   }, [eventsWithPosition]);
+
+  /** Mobile: scrollable height + Y positions with min gap; alternating lanes. */
+  const mobileScrollLayout = useMemo(() => {
+    const MIN_GAP = 52;
+    const PAD = 56;
+    const PIXELS_PER_DAY = 0.42;
+    const oneDay = 86400000;
+
+    const sorted = [...eventsWithPositionAndHeight].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    const H0 = Math.max(
+      720,
+      PAD * 2 + totalDays * PIXELS_PER_DAY + sorted.length * MIN_GAP * 0.05
+    );
+
+    const daysSince = (item: (typeof eventsWithPositionAndHeight)[0]) =>
+      Math.ceil(
+        (new Date(item.date).getTime() - birthDate.getTime()) / oneDay
+      );
+
+    let prevY = -Infinity;
+    const layoutById = new Map<
+      string,
+      { y: number; lane: MobilePinLane }
+    >();
+    let nonBirthIdx = 0;
+
+    for (const item of sorted) {
+      const days = daysSince(item);
+      const ideal =
+        PAD + (days / Math.max(1, totalDays)) * (H0 - PAD * 2);
+      const y = Math.max(ideal, prevY + MIN_GAP);
+      const birth =
+        item.event_types?.name === 'birth' || item.type === 'birth';
+      const lane: MobilePinLane = birth
+        ? 'center'
+        : nonBirthIdx++ % 2 === 0
+          ? 'right'
+          : 'left';
+      layoutById.set(item.id, { y, lane });
+      prevY = y;
+    }
+
+    const contentHeight = Math.max(H0, prevY + PAD + 48);
+
+    const yearYs = yearMarkers.map((m) => ({
+      year: m.year,
+      y: PAD + (m.position / 100) * (contentHeight - PAD * 2),
+    }));
+
+    return { contentHeight, layoutById, yearYs };
+  }, [eventsWithPositionAndHeight, birthDate, totalDays, yearMarkers]);
 
   const handlePinClick = (event: TimelineEvent) => {
     setSelectedEvent(event);
@@ -245,58 +298,79 @@ const Timeline = ({
           </div>
         )}
 
-        {/* Mobile Timeline */}
-        {isMobile && (
-          <div className="mobile-timeline relative h-[95vh] grid grid-cols-8 mt-4">
-            {/* Year Labels - Column 1, fixed to left side (mobile only) */}
-            <div className="col-span-1 sticky left-0 z-10 h-full">
-              {yearMarkers
-                .filter((marker) => marker.year % 5 === 0)
-                .map((marker) => (
-                  <div
-                    key={marker.year}
-                    className="absolute left-0 text-white text-xs bg-gray-900 px-2 py-1 rounded"
-                    style={{
-                      top: `${marker.position}%`,
-                      transform: 'translateY(-50%)',
-                    }}
-                  >
-                    {marker.year}
+        {/* Mobile: center spine, scroll zoom (px + min gap), alternating pins */}
+        {isMobile && mobileScrollLayout && (
+          <div className="mobile-timeline mt-2 flex h-[calc(100dvh-10.5rem)] min-h-[min(70vh,560px)] w-full max-w-lg flex-col self-center">
+            <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-1">
+              <div
+                className="relative mx-auto w-full"
+                style={{
+                  height: mobileScrollLayout.contentHeight,
+                  minHeight: mobileScrollLayout.contentHeight,
+                }}
+              >
+                <div
+                  className="pointer-events-none absolute inset-y-0 left-1/2 w-1 -translate-x-1/2 bg-white"
+                  style={{ zIndex: 'var(--z-timeline-base)' }}
+                />
+                {mobileScrollLayout.yearYs.map((row) => (
+                  <div key={row.year}>
+                    <div
+                      className="pointer-events-none absolute left-1/2 h-1 w-2 bg-white"
+                      style={{
+                        top: `${row.y}px`,
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        zIndex: 'var(--z-timeline-base)',
+                      }}
+                    />
+                    {row.year % 5 === 0 && (
+                      <div
+                        className="pointer-events-none absolute left-2 rounded bg-gray-900 px-1.5 py-0.5 text-[10px] text-white"
+                        style={{
+                          top: `${row.y}px`,
+                          transform: 'translateY(-50%)',
+                          zIndex: 'var(--z-timeline-base)',
+                        }}
+                      >
+                        {row.year}
+                      </div>
+                    )}
                   </div>
                 ))}
-            </div>
-
-            {/* Timeline content - Columns 2-7, centered */}
-            <div className="col-span-7 col-start-2 relative h-full">
-              {/* Timeline Line */}
-              <div className="mobile-timeline-line w-1 bg-white h-full absolute left-1/2 -translate-x-1/2 z-10" />
-              {/* Year Marker Ticks */}
-              {yearMarkers.map((marker) => (
-                <div
-                  key={marker.year}
-                  className="h-1 w-2 bg-white absolute left-1/2 -translate-x-1/2 z-10"
-                  style={{ top: `${marker.position}%` }}
-                />
-              ))}
-              {/* Pins */}
-              {eventsWithPositionAndHeight.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="absolute z-20 left-1/2 -translate-x-1/3"
-                  style={{
-                    top: `${item.position}%`,
-                  }}
-                >
-                  <Pin
-                    event={item}
-                    isBirth={isBirthEvent(item)}
-                    handleClick={handlePinClick}
-                    isMobile={true}
-                    index={index}
-                    height={item.height}
-                  />
-                </div>
-              ))}
+                {eventsWithPositionAndHeight.map((item, index) => {
+                  const L = mobileScrollLayout.layoutById.get(item.id);
+                  if (!L) return null;
+                  const { y, lane } = L;
+                  const pinTransform =
+                    lane === 'center'
+                      ? 'translate(-50%, -50%)'
+                      : lane === 'left'
+                        ? 'translate(-100%, -50%)'
+                        : 'translate(0, -50%)';
+                  return (
+                    <div
+                      key={item.id}
+                      className="absolute left-1/2"
+                      style={{
+                        top: `${y}px`,
+                        transform: pinTransform,
+                        zIndex: 'var(--z-timeline-pins)',
+                      }}
+                    >
+                      <Pin
+                        event={item}
+                        isBirth={isBirthEvent(item)}
+                        handleClick={handlePinClick}
+                        isMobile={true}
+                        index={index}
+                        height={item.height}
+                        mobileLane={lane}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}

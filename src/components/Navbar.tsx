@@ -75,7 +75,11 @@ const Navbar = ({ initialSession, currentPath }: NavbarProps) => {
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40" onClick={closeMenu}>
+        <div
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50"
+          style={{ zIndex: 'var(--z-nav-overlay)' }}
+          onClick={closeMenu}
+        >
           <div className="absolute top-0 right-0 h-full w-64 bg-gray-900 shadow-lg transform transition-transform duration-300 ease-in-out">
             <div className="flex flex-col p-6 space-y-4">
               <button 

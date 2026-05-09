@@ -7,7 +7,7 @@ interface BackButtonProps {
 
 const BackButton: React.FC<BackButtonProps> = ({ 
   href, 
-  className = "fixed md:top-20 top-15 left-6 z-50 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 flex items-center space-x-2" 
+  className = "fixed md:top-20 top-15 left-6 z-[var(--z-back-button)] bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 flex items-center space-x-2" 
 }) => {
   const handleBack = () => {
     if (href) {

@@ -90,7 +90,10 @@ const CreateEventTypeModal = ({ isOpen, onClose, onSuccess }: CreateEventTypeMod
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fadeIn">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center animate-fadeIn"
+      style={{ zIndex: 'var(--z-modal)' }}
+    >
       <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <h2 className="text-white text-xl font-semibold mb-4">
           Create Custom Event Type
