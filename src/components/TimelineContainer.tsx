@@ -4,7 +4,6 @@ import TimelineFilters from './TimelineFilters';
 import type { TimelineEvent } from '../types/events';
 import type { EventType } from '../types/eventTypes';
 import EventFormModal from './EventFormModal';
-import CreateEventTypeModal from './CreateEventTypeModal';
 import { supabase } from '../lib/supabase';
 
 interface TimelineContainerProps {
