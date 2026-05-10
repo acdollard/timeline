@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { AuthenticationError, getAuthenticatedRequest } from '../../lib/supabase';
 import type { EventPhoto } from '../../types/eventPhotos';
 
 const BUCKET_NAME = 'event-photos';
@@ -7,12 +7,12 @@ const BUCKET_NAME = 'event-photos';
 /**
  * Helper function to enrich photos with signed URLs
  */
-async function enrichPhotosWithUrls(photos: EventPhoto[]): Promise<EventPhoto[]> {
+async function enrichPhotosWithUrls(supabaseClient: any, photos: EventPhoto[]): Promise<EventPhoto[]> {
   if (!photos || photos.length === 0) return [];
 
   const photosWithUrls = await Promise.all(
     photos.map(async (photo) => {
-      const { data: urlData } = await supabase.storage
+      const { data: urlData } = await supabaseClient.storage
         .from(BUCKET_NAME)
         .createSignedUrl(photo.file_path, 3600);
 
@@ -26,19 +26,36 @@ async function enrichPhotosWithUrls(photos: EventPhoto[]): Promise<EventPhoto[]>
   return photosWithUrls;
 }
 
-export const GET: APIRoute = async ({ params }) => {
+function jsonResponse(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+async function enrichEventPhotos(supabaseClient: any, event: any) {
+  if (event.event_photos && event.event_photos.length > 0) {
+    event.photos = await enrichPhotosWithUrls(supabaseClient, event.event_photos);
+    delete event.event_photos;
+  } else {
+    event.photos = [];
+  }
+
+  return event;
+}
+
+function stripReadonlyEventFields(event: any) {
+  const { id, user_id, event_types, event_photos, photos, created_at, updated_at, ...updates } = event;
+  return updates;
+}
+
+export const GET: APIRoute = async ({ params, cookies }) => {
   try {
+    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+
     if (params.id) {
       // Get single event
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        return new Response(JSON.stringify({ error: 'No authenticated user' }), {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('events')
         .select(`
           *,
@@ -73,13 +90,7 @@ export const GET: APIRoute = async ({ params }) => {
       }
 
       // Enrich photos with signed URLs
-      if (data.event_photos && data.event_photos.length > 0) {
-        data.photos = await enrichPhotosWithUrls(data.event_photos);
-        // Remove the raw event_photos field, keep only enriched photos
-        delete data.event_photos;
-      } else {
-        data.photos = [];
-      }
+      await enrichEventPhotos(supabaseClient, data);
 
       return new Response(JSON.stringify(data), {
         status: 200,
@@ -89,16 +100,7 @@ export const GET: APIRoute = async ({ params }) => {
       });
     }
 
-    // Get all events for the authenticated user
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      return new Response(JSON.stringify({ error: 'No authenticated user' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('events')
       .select(`
         *,
@@ -134,14 +136,7 @@ export const GET: APIRoute = async ({ params }) => {
     // Enrich all events' photos with signed URLs
     const eventsWithPhotos = await Promise.all(
       (data || []).map(async (event) => {
-        if (event.event_photos && event.event_photos.length > 0) {
-          event.photos = await enrichPhotosWithUrls(event.event_photos);
-          // Remove the raw event_photos field
-          delete event.event_photos;
-        } else {
-          event.photos = [];
-        }
-        return event;
+        return enrichEventPhotos(supabaseClient, event);
       })
     );
 
@@ -152,6 +147,10 @@ export const GET: APIRoute = async ({ params }) => {
       }
     });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return jsonResponse({ error: error.message }, 401);
+    }
+
     console.error('API error:', error);
     return new Response(JSON.stringify({ 
       error: 'Failed to fetch events',
@@ -165,16 +164,40 @@ export const GET: APIRoute = async ({ params }) => {
   }
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    const event = await request.json();
-    const { data, error } = await supabase
+    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+    const event = stripReadonlyEventFields(await request.json());
+    const { data, error } = await supabaseClient
       .from('events')
-      .insert([event])
-      .select()
+      .insert([{ ...event, user_id: session.user.id }])
+      .select(`
+        *,
+        event_types (
+          id,
+          name,
+          display_name,
+          color,
+          icon
+        ),
+        event_photos (
+          id,
+          event_id,
+          user_id,
+          file_name,
+          file_path,
+          file_size,
+          mime_type,
+          alt_text,
+          sort_order,
+          created_at,
+          updated_at
+        )
+      `)
       .single();
 
     if (error) throw error;
+    await enrichEventPhotos(supabaseClient, data);
 
     return new Response(JSON.stringify(data), {
       status: 201,
@@ -183,6 +206,10 @@ export const POST: APIRoute = async ({ request }) => {
       }
     });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return jsonResponse({ error: error.message }, 401);
+    }
+
     return new Response(JSON.stringify({ error: 'Failed to create event' }), {
       status: 500,
       headers: {
@@ -192,8 +219,10 @@ export const POST: APIRoute = async ({ request }) => {
   }
 };
 
-export const PUT: APIRoute = async ({ request, params }) => {
+export const PUT: APIRoute = async ({ request, params, cookies }) => {
   try {
+    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+
     if (!params.id) {
       return new Response(JSON.stringify({ error: 'Event ID is required' }), {
         status: 400,
@@ -203,11 +232,12 @@ export const PUT: APIRoute = async ({ request, params }) => {
       });
     }
 
-    const event = await request.json();
-    const { data, error } = await supabase
+    const event = stripReadonlyEventFields(await request.json());
+    const { data, error } = await supabaseClient
       .from('events')
       .update(event)
       .eq('id', params.id)
+      .eq('user_id', session.user.id)
       .select()
       .single();
 
@@ -220,6 +250,10 @@ export const PUT: APIRoute = async ({ request, params }) => {
       }
     });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return jsonResponse({ error: error.message }, 401);
+    }
+
     return new Response(JSON.stringify({ error: 'Failed to update event' }), {
       status: 500,
       headers: {
@@ -229,8 +263,10 @@ export const PUT: APIRoute = async ({ request, params }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ params, cookies }) => {
   try {
+    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+
     if (!params.id) {
       return new Response(JSON.stringify({ error: 'Event ID is required' }), {
         status: 400,
@@ -240,10 +276,11 @@ export const DELETE: APIRoute = async ({ params }) => {
       });
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('events')
       .delete()
-      .eq('id', params.id);
+      .eq('id', params.id)
+      .eq('user_id', session.user.id);
 
     if (error) throw error;
 
@@ -251,6 +288,10 @@ export const DELETE: APIRoute = async ({ params }) => {
       status: 204
     });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return jsonResponse({ error: error.message }, 401);
+    }
+
     return new Response(JSON.stringify({ error: 'Failed to delete event' }), {
       status: 500,
       headers: {

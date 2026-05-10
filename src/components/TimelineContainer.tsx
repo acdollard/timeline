@@ -5,7 +5,6 @@ import type { TimelineEvent } from '../types/events';
 import type { EventType } from '../types/eventTypes';
 import EventFormModal from './EventFormModal';
 import CreateEventTypeModal from './CreateEventTypeModal';
-import { supabase } from '../lib/supabase';
 
 interface TimelineContainerProps {
   events: TimelineEvent[];
@@ -47,10 +46,10 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
         setBirthEventType({
           id: birthEventType.id,
           name: birthEventType.name,
-          displayName: birthEventType.display_name,
+          displayName: birthEventType.displayName,
           color: birthEventType.color,
           icon: "",
-          isDefault: false,
+          isDefault: birthEventType.isDefault,
           isActive: true
         });
       }
@@ -100,54 +99,18 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       setIsLoading(true);
       if (!sessionId) throw new Error('No user ID available');
 
-      const { data, error } = await supabase
-        .from('events')
-        .insert([{ ...event, user_id: sessionId }])
-        .select(`
-          *,
-          event_types (
-            id,
-            name,
-            display_name,
-            color,
-            icon
-          ),
-          event_photos (
-            id,
-            event_id,
-            user_id,
-            file_name,
-            file_path,
-            file_size,
-            mime_type,
-            alt_text,
-            sort_order,
-            created_at,
-            updated_at
-          )
-        `)
-        .single();
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
 
-      if (error) throw error;
-
-      if (data && data.event_photos && data.event_photos.length > 0) {
-        const photosWithUrls = await Promise.all(
-          data.event_photos.map(async (photo: any) => {
-            const { data: urlData } = await supabase.storage
-              .from('event-photos')
-              .createSignedUrl(photo.file_path, 3600);
-
-            return {
-              ...photo,
-              url: urlData?.signedUrl || ''
-            };
-          })
-        );
-        data.photos = photosWithUrls;
-        delete data.event_photos;
-      } else if (data) {
-        data.photos = [];
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || 'Failed to create event');
       }
+
+      const data = await response.json();
       await fetchEvents();
       return data;
     } catch (err) {
@@ -165,57 +128,18 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       
       if (!sessionId) throw new Error('No user ID available');
 
-      const { data, error } = await supabase
-        .from('events')
-        .update(event)
-        .eq('id', id)
-        .eq('user_id', sessionId)
-        .select(`
-          *,
-          event_types (
-            id,
-            name,
-            display_name,
-            color,
-            icon
-          ),
-          event_photos (
-            id,
-            event_id,
-            user_id,
-            file_name,
-            file_path,
-            file_size,
-            mime_type,
-            alt_text,
-            sort_order,
-            created_at,
-            updated_at
-          )
-        `)
-        .single();
+      const response = await fetch(`/api/events/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(event),
+      });
 
-      if (error) throw error;
-      
-      // Enrich photos with signed URLs if any exist
-      if (data && data.event_photos && data.event_photos.length > 0) {
-        const photosWithUrls = await Promise.all(
-          data.event_photos.map(async (photo: any) => {
-            const { data: urlData } = await supabase.storage
-              .from('event-photos')
-              .createSignedUrl(photo.file_path, 3600);
-            
-            return {
-              ...photo,
-              url: urlData?.signedUrl || ''
-            };
-          })
-        );
-        data.photos = photosWithUrls;
-        delete data.event_photos;
-      } else if (data) {
-        data.photos = [];
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || 'Failed to update event');
       }
+
+      const data = await response.json();
       
       await fetchEvents();
       return data;
@@ -234,13 +158,15 @@ const TimelineContainer = ({ events, sessionId }: TimelineContainerProps) => {
       
       if (!sessionId) throw new Error('No user ID available');
 
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', sessionId);
+      const response = await fetch(`/api/events/${id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || 'Failed to delete event');
+      }
+
       await fetchEvents();
     } catch (err) {
       console.error('Failed to delete event:', err);
