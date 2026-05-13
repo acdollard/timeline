@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { supabase } from "../lib/supabase";
+import { createRequestSupabaseClient } from "../lib/supabase";
 
 const { cookies, redirect, request } = Astro;
 
@@ -29,7 +29,8 @@ let sessionError = null;
 let isConfirmed = false;
 
 if (access_token && refresh_token) {
-  const sessionResult = await supabase.auth.setSession({
+  const supabaseClient = createRequestSupabaseClient();
+  const sessionResult = await supabaseClient.auth.setSession({
     access_token,
     refresh_token,
   });
