@@ -49,6 +49,32 @@ function stripReadonlyEventFields(event: any) {
   return updates;
 }
 
+async function deleteEventPhotos(supabaseClient: any, eventId: string, userId: string) {
+  const { data: photos, error: fetchError } = await supabaseClient
+    .from('event_photos')
+    .select('file_path')
+    .eq('event_id', eventId)
+    .eq('user_id', userId);
+
+  if (fetchError) throw fetchError;
+  if (!photos || photos.length === 0) return;
+
+  const filePaths = photos.map((photo: { file_path: string }) => photo.file_path);
+  const { error: storageError } = await supabaseClient.storage
+    .from(BUCKET_NAME)
+    .remove(filePaths);
+
+  if (storageError) throw storageError;
+
+  const { error: deleteError } = await supabaseClient
+    .from('event_photos')
+    .delete()
+    .eq('event_id', eventId)
+    .eq('user_id', userId);
+
+  if (deleteError) throw deleteError;
+}
+
 export const GET: APIRoute = async ({ params, cookies }) => {
   try {
     const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
@@ -275,6 +301,8 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
         }
       });
     }
+
+    await deleteEventPhotos(supabaseClient, params.id, session.user.id);
 
     const { error } = await supabaseClient
       .from('events')

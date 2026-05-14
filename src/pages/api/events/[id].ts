@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
 
+const BUCKET_NAME = 'event-photos';
+
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -11,6 +13,32 @@ function jsonResponse(body: unknown, status: number): Response {
 function stripReadonlyEventFields(event: any) {
   const { id, user_id, event_types, event_photos, photos, created_at, updated_at, ...updates } = event;
   return updates;
+}
+
+async function deleteEventPhotos(supabaseClient: any, eventId: string, userId: string) {
+  const { data: photos, error: fetchError } = await supabaseClient
+    .from('event_photos')
+    .select('file_path')
+    .eq('event_id', eventId)
+    .eq('user_id', userId);
+
+  if (fetchError) throw fetchError;
+  if (!photos || photos.length === 0) return;
+
+  const filePaths = photos.map((photo: { file_path: string }) => photo.file_path);
+  const { error: storageError } = await supabaseClient.storage
+    .from(BUCKET_NAME)
+    .remove(filePaths);
+
+  if (storageError) throw storageError;
+
+  const { error: deleteError } = await supabaseClient
+    .from('event_photos')
+    .delete()
+    .eq('event_id', eventId)
+    .eq('user_id', userId);
+
+  if (deleteError) throw deleteError;
 }
 
 export const GET: APIRoute = async ({ params, cookies }) => {
@@ -134,6 +162,7 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
     }
 
     const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+    await deleteEventPhotos(supabaseClient, id, session.user.id);
 
     const { error } = await supabaseClient
       .from('events')
