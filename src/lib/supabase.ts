@@ -15,6 +15,25 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 type CookieStore = {
   get(name: string): { value: string } | undefined;
+  set(
+    name: string,
+    value: string,
+    options: {
+      path: string;
+      secure: boolean;
+      httpOnly: boolean;
+      sameSite: 'lax';
+      maxAge: number;
+    }
+  ): void;
+};
+
+const AUTH_COOKIE_OPTIONS = {
+  path: '/',
+  secure: true,
+  httpOnly: true,
+  sameSite: 'lax' as const,
+  maxAge: 60 * 60 * 24 * 7,
 };
 
 export class AuthenticationError extends Error {
@@ -32,6 +51,14 @@ export function createRequestSupabaseClient(): SupabaseClient {
       detectSessionInUrl: false,
     },
   });
+}
+
+export function setAuthSessionCookies(
+  cookies: CookieStore,
+  session: Pick<Session, 'access_token' | 'refresh_token'>
+) {
+  cookies.set('sb-access-token', session.access_token, AUTH_COOKIE_OPTIONS);
+  cookies.set('sb-refresh-token', session.refresh_token, AUTH_COOKIE_OPTIONS);
 }
 
 export async function getAuthenticatedRequest(
@@ -55,6 +82,10 @@ export async function getAuthenticatedRequest(
 
   if (error || !session) {
     throw new AuthenticationError('Invalid session');
+  }
+
+  if (session.access_token !== accessToken || session.refresh_token !== refreshToken) {
+    setAuthSessionCookies(cookies, session);
   }
 
   return { supabaseClient, session };
