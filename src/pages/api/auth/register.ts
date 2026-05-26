@@ -1,7 +1,7 @@
 // With `output: 'static'` configured:
 // export const prerender = false;
 import type { APIRoute } from "astro";
-import { supabase } from "../../../lib/supabase";
+import { createRequestSupabaseClient } from "../../../lib/supabase";
 
 export const POST: APIRoute = async ({ request, redirect }) => {
   const formData = await request.formData();
@@ -13,10 +13,11 @@ export const POST: APIRoute = async ({ request, redirect }) => {
   }
 
   try {
+    const supabaseClient = createRequestSupabaseClient();
     // Get the origin URL for email redirect
     const origin = new URL(request.url).origin;
     
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
       options: {

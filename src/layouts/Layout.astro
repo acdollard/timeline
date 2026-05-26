@@ -2,34 +2,32 @@
 import "../styles/global.css";
 import Navbar from "../components/Navbar";
 import BackButton from "../components/BackButton";
-import { supabase } from "../lib/supabase";
+import { getAuthenticatedRequest } from "../lib/supabase";
+import type { Session } from "@supabase/supabase-js";
 
 interface Props {
   title?: string;
   requireAuth?: boolean;
   showBackButton?: boolean;
+  initialSession?: Session | null;
 }
 
 const {
   title = "Timeline",
   requireAuth = false,
   showBackButton = true,
+  initialSession = null,
 } = Astro.props;
 
 const accessToken = Astro.cookies.get("sb-access-token");
 const refreshToken = Astro.cookies.get("sb-refresh-token");
 const currentPath = Astro.url.pathname;
 
-let session = null;
-if (accessToken && refreshToken) {
+let session = initialSession;
+if (!session && accessToken && refreshToken) {
   try {
-    const result = await supabase.auth.setSession({
-      refresh_token: refreshToken.value,
-      access_token: accessToken.value,
-    });
-    if (!result.error) {
-      session = result.data.session;
-    }
+    const auth = await getAuthenticatedRequest(Astro.cookies);
+    session = auth.session;
   } catch (error) {
     // Session is already null, no need to handle error
   }

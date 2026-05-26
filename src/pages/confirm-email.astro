@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { supabase } from "../lib/supabase";
+import { createRequestSupabaseClient, setAuthSessionCookies } from "../lib/supabase";
+import type { AuthError, Session } from "@supabase/supabase-js";
 
 const { cookies, redirect, request } = Astro;
 
@@ -24,12 +25,13 @@ if (!access_token || !refresh_token) {
 }
 
 // Set the session with the tokens from the email (only if we have query params)
-let session = null;
-let sessionError = null;
+let session: Session | null = null;
+let sessionError: AuthError | null = null;
 let isConfirmed = false;
 
 if (access_token && refresh_token) {
-  const sessionResult = await supabase.auth.setSession({
+  const supabaseClient = createRequestSupabaseClient();
+  const sessionResult = await supabaseClient.auth.setSession({
     access_token,
     refresh_token,
   });
@@ -40,22 +42,7 @@ if (access_token && refresh_token) {
   if (session && !sessionError) {
     isConfirmed = true;
     
-    // Set cookies for persistent session
-    cookies.set("sb-access-token", access_token, {
-      path: "/",
-      secure: true,
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
-    
-    cookies.set("sb-refresh-token", refresh_token, {
-      path: "/",
-      secure: true,
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
+    setAuthSessionCookies(cookies, session);
   }
 }
 
@@ -88,7 +75,7 @@ const getSuccessMessage = (success: string | null) => {
 };
 ---
 
-<Layout title="Confirm Email">
+<Layout title="Confirm Email" initialSession={session}>
   <div
     class="flex flex-col items-center justify-center h-screen bg-darkestGray"
   >
