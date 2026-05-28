@@ -1,35 +1,12 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { AuthenticationError, getAuthenticatedRequest } from '../../lib/supabase';
 import type { UploadPhotoResult } from '../../types/eventPhotos';
 
 const BUCKET_NAME = 'event-photos';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    // Authenticate user using cookies
-    const accessToken = cookies.get('sb-access-token')?.value;
-    const refreshToken = cookies.get('sb-refresh-token')?.value;
-
-    if (!accessToken || !refreshToken) {
-      return new Response(JSON.stringify({ error: 'No authenticated user' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Set session from cookies
-    const { data: { session }, error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    if (sessionError || !session) {
-      return new Response(JSON.stringify({ error: 'Invalid session' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
+    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
     const userId = session.user.id;
 
     // Parse FormData
@@ -63,7 +40,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     // Verify that the event belongs to the user
-    const { data: event, error: eventError } = await supabase
+    const { data: event, error: eventError } = await supabaseClient
       .from('events')
       .select('id')
       .eq('id', eventId)
@@ -86,7 +63,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Convert File to ArrayBuffer for Supabase storage
     const arrayBuffer = await file.arrayBuffer();
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { data: uploadData, error: uploadError } = await supabaseClient.storage
       .from(BUCKET_NAME)
       .upload(filePath, arrayBuffer, {
         contentType: file.type,
@@ -104,7 +81,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Step 2: Insert metadata into event_photos table
     // Get the current max sort_order for this event
-    const { data: existingPhotos } = await supabase
+    const { data: existingPhotos } = await supabaseClient
       .from('event_photos')
       .select('sort_order')
       .eq('event_id', eventId)
@@ -117,7 +94,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       ? existingPhotos.sort_order + 1 
       : 0;
 
-    const { data: photoData, error: dbError } = await supabase
+    const { data: photoData, error: dbError } = await supabaseClient
       .from('event_photos')
       .insert({
         event_id: eventId,
@@ -134,7 +111,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     if (dbError) {
       // If database insert fails, clean up the uploaded file
-      await supabase.storage
+      await supabaseClient.storage
         .from(BUCKET_NAME)
         .remove([filePath]);
       
@@ -145,7 +122,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     // Step 3: Generate signed URL for immediate display
-    const { data: urlData } = await supabase.storage
+    const { data: urlData } = await supabaseClient.storage
       .from(BUCKET_NAME)
       .createSignedUrl(filePath, 3600); // URL valid for 1 hour
 
@@ -165,6 +142,13 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       }
     });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     console.error('Photo upload API error:', error);
     return new Response(JSON.stringify({ 
       error: 'Failed to upload photo',

@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { supabase } from "../lib/supabase";
+import { createRequestSupabaseClient, setAuthSessionCookies } from "../lib/supabase";
 
 const { cookies, redirect, request } = Astro;
 
@@ -17,6 +17,7 @@ const refreshToken = cookies.get("sb-refresh-token");
 // Only redirect if we have both tokens and they're valid
 if (accessToken && refreshToken) {
   try {
+    const supabase = createRequestSupabaseClient();
     const {
       data: { session },
       error: sessionError,
@@ -26,6 +27,7 @@ if (accessToken && refreshToken) {
     });
 
     if (session && !sessionError) {
+      setAuthSessionCookies(cookies, session);
       return redirect("/");
     }
   } catch (e) {

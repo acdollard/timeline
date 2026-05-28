@@ -1,11 +1,12 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
+import { createRequestSupabaseClient } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   try {
     const formData = await request.formData();
     const email = formData.get('email') as string;
+    const supabase = createRequestSupabaseClient();
 
     // Validate email
     if (!email || !email.includes('@')) {
