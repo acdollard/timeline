@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { createRequestSupabaseClient } from '../../lib/supabase';
 
 const testData = [
   {
@@ -25,7 +25,8 @@ const testData = [
 export const GET: APIRoute = async () => {
   try {
     console.log('Seeding test data...');
-    const { data, error } = await supabase
+    const supabaseClient = createRequestSupabaseClient();
+    const { data, error } = await supabaseClient
       .from('events')
       .insert(testData)
       .select();

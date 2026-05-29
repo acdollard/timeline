@@ -1,10 +1,11 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { createRequestSupabaseClient } from '../../lib/supabase';
 
 export const GET: APIRoute = async () => {
   try {
+    const supabaseClient = createRequestSupabaseClient();
     // Test Supabase connection
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('events')
       .select('*')
       .limit(5);
