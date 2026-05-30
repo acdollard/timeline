@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
+import { createRequestSupabaseClient } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 
 export const POST: APIRoute = async ({ request, redirect }) => {
@@ -25,8 +25,10 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       return redirect('/reset-password?error=password_mismatch');
     }
 
-    // Set session with tokens
-    const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+    const supabaseClient = createRequestSupabaseClient();
+
+    // Set session with tokens on a request-scoped client.
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
     });
@@ -37,7 +39,7 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     }
 
     // Update password
-    const { error: updateError } = await supabase.auth.updateUser({
+    const { error: updateError } = await supabaseClient.auth.updateUser({
       password: password
     });
 

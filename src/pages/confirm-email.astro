@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { supabase } from "../lib/supabase";
+import { createRequestSupabaseClient, setAuthSessionCookies } from "../lib/supabase";
 
 const { cookies, redirect, request } = Astro;
 
@@ -29,7 +29,8 @@ let sessionError = null;
 let isConfirmed = false;
 
 if (access_token && refresh_token) {
-  const sessionResult = await supabase.auth.setSession({
+  const supabaseClient = createRequestSupabaseClient();
+  const sessionResult = await supabaseClient.auth.setSession({
     access_token,
     refresh_token,
   });
@@ -39,23 +40,7 @@ if (access_token && refresh_token) {
   // If session is set successfully, email is confirmed
   if (session && !sessionError) {
     isConfirmed = true;
-    
-    // Set cookies for persistent session
-    cookies.set("sb-access-token", access_token, {
-      path: "/",
-      secure: true,
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
-    
-    cookies.set("sb-refresh-token", refresh_token, {
-      path: "/",
-      secure: true,
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
+    setAuthSessionCookies(cookies, session);
   }
 }
 
