@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
+import { deleteEventWithPhotos } from '../../../lib/eventDeletion';
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -135,13 +136,10 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
 
     const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
 
-    const { error } = await supabaseClient
-      .from('events')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', session.user.id);
-
-    if (error) throw error;
+    const deleted = await deleteEventWithPhotos(supabaseClient, id, session.user.id);
+    if (!deleted) {
+      return jsonResponse({ error: 'Event not found or access denied' }, 404);
+    }
 
     return new Response(null, { status: 204 });
   } catch (error) {
