@@ -1,7 +1,7 @@
 // With `output: 'static'` configured:
 // export const prerender = false;
 import type { APIRoute } from "astro";
-import { supabase } from "../../../lib/supabase";
+import { createRequestSupabaseClient, setAuthSessionCookies } from "../../../lib/supabase";
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const formData = await request.formData();
@@ -13,7 +13,8 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   }
 
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const supabaseClient = createRequestSupabaseClient();
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
       email,
       password,
     });
@@ -34,24 +35,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     }
 
     if (data.session) {
-      const { access_token, refresh_token } = data.session;
-      
-      // Set cookies
-      cookies.set("sb-access-token", access_token, {
-        path: "/",
-        secure: true,
-        httpOnly: true,
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 1 week
-      });
-      
-      cookies.set("sb-refresh-token", refresh_token, {
-        path: "/",
-        secure: true,
-        httpOnly: true,
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 1 week
-      });
+      setAuthSessionCookies(cookies, data.session);
 
       return redirect("/");
     }

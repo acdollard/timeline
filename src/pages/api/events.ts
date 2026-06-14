@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { AuthenticationError, getAuthenticatedRequest } from '../../lib/supabase';
+import { deleteEventWithPhotos } from '../../lib/eventDeletion';
 import type { EventPhoto } from '../../types/eventPhotos';
 
 const BUCKET_NAME = 'event-photos';
@@ -276,13 +277,7 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       });
     }
 
-    const { error } = await supabaseClient
-      .from('events')
-      .delete()
-      .eq('id', params.id)
-      .eq('user_id', session.user.id);
-
-    if (error) throw error;
+    await deleteEventWithPhotos(supabaseClient, session.user.id, params.id);
 
     return new Response(null, {
       status: 204
