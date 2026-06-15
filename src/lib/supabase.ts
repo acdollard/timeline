@@ -15,7 +15,27 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 type CookieStore = {
   get(name: string): { value: string } | undefined;
+  set(
+    name: string,
+    value: string,
+    options: {
+      path: string;
+      secure: boolean;
+      httpOnly: boolean;
+      sameSite: 'lax';
+      maxAge: number;
+    }
+  ): void;
+  delete(name: string, options: { path: string }): void;
 };
+
+const AUTH_COOKIE_OPTIONS = {
+  path: '/',
+  secure: true,
+  httpOnly: true,
+  sameSite: 'lax',
+  maxAge: 60 * 60 * 24 * 7,
+} as const;
 
 export class AuthenticationError extends Error {
   constructor(message = 'No authenticated user') {
@@ -32,6 +52,19 @@ export function createRequestSupabaseClient(): SupabaseClient {
       detectSessionInUrl: false,
     },
   });
+}
+
+export function setAuthSessionCookies(
+  cookies: Pick<CookieStore, 'set'>,
+  session: Pick<Session, 'access_token' | 'refresh_token'>
+): void {
+  cookies.set('sb-access-token', session.access_token, AUTH_COOKIE_OPTIONS);
+  cookies.set('sb-refresh-token', session.refresh_token, AUTH_COOKIE_OPTIONS);
+}
+
+export function clearAuthSessionCookies(cookies: Pick<CookieStore, 'delete'>): void {
+  cookies.delete('sb-access-token', { path: '/' });
+  cookies.delete('sb-refresh-token', { path: '/' });
 }
 
 export async function getAuthenticatedRequest(
@@ -55,6 +88,10 @@ export async function getAuthenticatedRequest(
 
   if (error || !session) {
     throw new AuthenticationError('Invalid session');
+  }
+
+  if (session.access_token !== accessToken || session.refresh_token !== refreshToken) {
+    setAuthSessionCookies(cookies, session);
   }
 
   return { supabaseClient, session };

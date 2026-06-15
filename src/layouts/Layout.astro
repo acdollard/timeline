@@ -2,7 +2,7 @@
 import "../styles/global.css";
 import Navbar from "../components/Navbar";
 import BackButton from "../components/BackButton";
-import { supabase } from "../lib/supabase";
+import { AuthenticationError, getAuthenticatedRequest } from "../lib/supabase";
 
 interface Props {
   title?: string;
@@ -23,14 +23,12 @@ const currentPath = Astro.url.pathname;
 let session = null;
 if (accessToken && refreshToken) {
   try {
-    const result = await supabase.auth.setSession({
-      refresh_token: refreshToken.value,
-      access_token: accessToken.value,
-    });
-    if (!result.error) {
-      session = result.data.session;
-    }
+    const result = await getAuthenticatedRequest(Astro.cookies);
+    session = result.session;
   } catch (error) {
+    if (!(error instanceof AuthenticationError)) {
+      console.error("Error validating session:", error);
+    }
     // Session is already null, no need to handle error
   }
 }

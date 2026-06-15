@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
+import { createRequestSupabaseClient } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 
 export const POST: APIRoute = async ({ request, redirect }) => {
@@ -26,6 +26,7 @@ export const POST: APIRoute = async ({ request, redirect }) => {
     }
 
     // Set session with tokens
+    const supabase = createRequestSupabaseClient();
     const { data: { session }, error: sessionError } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,

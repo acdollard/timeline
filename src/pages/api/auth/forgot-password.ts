@@ -1,8 +1,8 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
+import { createRequestSupabaseClient } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 
-export const POST: APIRoute = async ({ request, cookies, redirect }) => {
+export const POST: APIRoute = async ({ request, redirect }) => {
   try {
     const formData = await request.formData();
     const email = formData.get('email') as string;
@@ -13,6 +13,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     }
 
     // Send password reset email
+    const supabase = createRequestSupabaseClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${new URL(request.url).origin}/reset-password`,
     });

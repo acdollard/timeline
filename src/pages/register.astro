@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { supabase } from "../lib/supabase";
+import { getAuthenticatedRequest } from "../lib/supabase";
 
 const { cookies, redirect, request } = Astro;
 
@@ -14,15 +14,8 @@ const refreshToken = cookies.get("sb-refresh-token");
 
 if (accessToken && refreshToken) {
   try {
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.setSession({
-      access_token: accessToken.value,
-      refresh_token: refreshToken.value,
-    });
-
-    if (session && !sessionError) {
+    const { session } = await getAuthenticatedRequest(cookies);
+    if (session) {
       return redirect("/");
     }
   } catch (e) {
