@@ -1,30 +1,16 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
+import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
+
+function jsonResponse(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
 
 export const POST: APIRoute = async ({ request, cookies }) => {
   try {
-    const accessToken = cookies.get('sb-access-token')?.value;
-    const refreshToken = cookies.get('sb-refresh-token')?.value;
-
-    if (!accessToken || !refreshToken) {
-      return new Response(JSON.stringify({ error: 'No authenticated user' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const { data: { session }, error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    if (sessionError || !session) {
-      return new Response(JSON.stringify({ error: 'Invalid session' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
+    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
     const userId = session.user.id;
     const body = await request.json();
     const photoIds: string[] = body.photoIds;
@@ -36,7 +22,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    const { data: photos, error: fetchError } = await supabase
+    const { data: photos, error: fetchError } = await supabaseClient
       .from('event_photos')
       .select('id, user_id')
       .in('id', photoIds)
@@ -58,7 +44,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     }
 
     const updates = photoIds.map((photoId, index) => ({ id: photoId, sort_order: index }));
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseClient
       .from('event_photos')
       .upsert(updates, { onConflict: 'id' });
 
@@ -75,6 +61,10 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return jsonResponse({ error: error.message }, 401);
+    }
+
     console.error('Photo reorder API error:', error);
     return new Response(JSON.stringify({
       error: 'Failed to reorder photos',

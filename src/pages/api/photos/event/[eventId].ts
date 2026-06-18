@@ -1,7 +1,14 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../../lib/supabase';
+import { AuthenticationError, getAuthenticatedRequest } from '../../../../lib/supabase';
 
 const BUCKET_NAME = 'event-photos';
+
+function jsonResponse(body: unknown, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
 
 export const DELETE: APIRoute = async ({ params, cookies }) => {
   try {
@@ -13,32 +20,11 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       });
     }
 
-    const accessToken = cookies.get('sb-access-token')?.value;
-    const refreshToken = cookies.get('sb-refresh-token')?.value;
-
-    if (!accessToken || !refreshToken) {
-      return new Response(JSON.stringify({ error: 'No authenticated user' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const { data: { session }, error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    if (sessionError || !session) {
-      return new Response(JSON.stringify({ error: 'Invalid session' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
+    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
     const userId = session.user.id;
 
     // Fetch photos to delete
-    const { data: photos, error: fetchError } = await supabase
+    const { data: photos, error: fetchError } = await supabaseClient
       .from('event_photos')
       .select('id, file_path')
       .eq('event_id', eventId)
@@ -54,7 +40,7 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
 
     if (photos && photos.length > 0) {
       const filePaths = photos.map((photo) => photo.file_path);
-      const { error: storageError } = await supabase.storage
+      const { error: storageError } = await supabaseClient.storage
         .from(BUCKET_NAME)
         .remove(filePaths);
 
@@ -66,7 +52,7 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
         });
       }
 
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await supabaseClient
         .from('event_photos')
         .delete()
         .eq('event_id', eventId)
@@ -86,6 +72,10 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return jsonResponse({ error: error.message }, 401);
+    }
+
     console.error('Bulk photo deletion API error:', error);
     return new Response(JSON.stringify({
       error: 'Failed to delete event photos',

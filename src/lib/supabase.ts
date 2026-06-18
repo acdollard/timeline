@@ -17,6 +17,20 @@ type CookieStore = {
   get(name: string): { value: string } | undefined;
 };
 
+type WritableCookieStore = CookieStore & {
+  set(
+    name: string,
+    value: string,
+    options: {
+      path: string;
+      secure: boolean;
+      httpOnly: boolean;
+      sameSite: 'lax';
+      maxAge: number;
+    }
+  ): void;
+};
+
 export class AuthenticationError extends Error {
   constructor(message = 'No authenticated user') {
     super(message);
@@ -34,8 +48,26 @@ export function createRequestSupabaseClient(): SupabaseClient {
   });
 }
 
+export function setAuthSessionCookies(cookies: WritableCookieStore, session: Session): void {
+  cookies.set('sb-access-token', session.access_token, {
+    path: '/',
+    secure: true,
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+  });
+
+  cookies.set('sb-refresh-token', session.refresh_token, {
+    path: '/',
+    secure: true,
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+  });
+}
+
 export async function getAuthenticatedRequest(
-  cookies: CookieStore
+  cookies: WritableCookieStore
 ): Promise<{ supabaseClient: SupabaseClient; session: Session }> {
   const accessToken = cookies.get('sb-access-token')?.value;
   const refreshToken = cookies.get('sb-refresh-token')?.value;
@@ -56,6 +88,8 @@ export async function getAuthenticatedRequest(
   if (error || !session) {
     throw new AuthenticationError('Invalid session');
   }
+
+  setAuthSessionCookies(cookies, session);
 
   return { supabaseClient, session };
 }
