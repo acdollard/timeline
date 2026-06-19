@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { deleteEventPhotosForUser } from '../../../lib/eventPhotoCleanup';
 import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -134,6 +135,8 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
     }
 
     const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+
+    await deleteEventPhotosForUser(supabaseClient, id, session.user.id);
 
     const { error } = await supabaseClient
       .from('events')
