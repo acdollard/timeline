@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
-
-const BUCKET_NAME = 'event-photos';
+import { deletePhotoForUser } from '../../../lib/eventPhotoCleanup';
+import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
 
 export const DELETE: APIRoute = async ({ params, cookies }) => {
   try {
@@ -13,69 +12,12 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       });
     }
 
-    const accessToken = cookies.get('sb-access-token')?.value;
-    const refreshToken = cookies.get('sb-refresh-token')?.value;
+    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+    const deleted = await deletePhotoForUser(supabaseClient, photoId, session.user.id);
 
-    if (!accessToken || !refreshToken) {
-      return new Response(JSON.stringify({ error: 'No authenticated user' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const { data: { session }, error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    });
-
-    if (sessionError || !session) {
-      return new Response(JSON.stringify({ error: 'Invalid session' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    const userId = session.user.id;
-
-    // Fetch photo to ensure it belongs to the user and get file path
-    const { data: photo, error: photoError } = await supabase
-      .from('event_photos')
-      .select('id, file_path, event_id, user_id')
-      .eq('id', photoId)
-      .eq('user_id', userId)
-      .single();
-
-    if (photoError || !photo) {
+    if (!deleted) {
       return new Response(JSON.stringify({ error: 'Photo not found or access denied' }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Delete file from storage
-    const { error: storageError } = await supabase.storage
-      .from(BUCKET_NAME)
-      .remove([photo.file_path]);
-
-    if (storageError) {
-      console.error('Failed to delete photo from storage:', storageError);
-      return new Response(JSON.stringify({ error: 'Failed to delete photo from storage' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Delete database record
-    const { error: deleteError } = await supabase
-      .from('event_photos')
-      .delete()
-      .eq('id', photoId)
-      .eq('user_id', userId);
-
-    if (deleteError) {
-      console.error('Failed to delete photo metadata:', deleteError);
-      return new Response(JSON.stringify({ error: 'Failed to delete photo metadata' }), {
-        status: 500,
         headers: { 'Content-Type': 'application/json' }
       });
     }
@@ -85,6 +27,13 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     console.error('Photo deletion API error:', error);
     return new Response(JSON.stringify({
       error: 'Failed to delete photo',
