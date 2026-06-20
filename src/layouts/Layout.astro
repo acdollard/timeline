@@ -2,7 +2,7 @@
 import "../styles/global.css";
 import Navbar from "../components/Navbar";
 import BackButton from "../components/BackButton";
-import { supabase } from "../lib/supabase";
+import { getAuthenticatedRequest } from "../lib/supabase";
 
 interface Props {
   title?: string;
@@ -16,23 +16,13 @@ const {
   showBackButton = true,
 } = Astro.props;
 
-const accessToken = Astro.cookies.get("sb-access-token");
-const refreshToken = Astro.cookies.get("sb-refresh-token");
 const currentPath = Astro.url.pathname;
 
 let session = null;
-if (accessToken && refreshToken) {
-  try {
-    const result = await supabase.auth.setSession({
-      refresh_token: refreshToken.value,
-      access_token: accessToken.value,
-    });
-    if (!result.error) {
-      session = result.data.session;
-    }
-  } catch (error) {
-    // Session is already null, no need to handle error
-  }
+try {
+  session = (await getAuthenticatedRequest(Astro.cookies)).session;
+} catch (error) {
+  // Session is already null, no need to handle error
 }
 
 if (requireAuth && !session) {
