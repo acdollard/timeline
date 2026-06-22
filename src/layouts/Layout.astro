@@ -2,7 +2,7 @@
 import "../styles/global.css";
 import Navbar from "../components/Navbar";
 import BackButton from "../components/BackButton";
-import { supabase } from "../lib/supabase";
+import { createRequestSupabaseClient, setAuthSessionCookies } from "../lib/supabase";
 
 interface Props {
   title?: string;
@@ -23,12 +23,16 @@ const currentPath = Astro.url.pathname;
 let session = null;
 if (accessToken && refreshToken) {
   try {
-    const result = await supabase.auth.setSession({
+    const supabaseClient = createRequestSupabaseClient();
+    const result = await supabaseClient.auth.setSession({
       refresh_token: refreshToken.value,
       access_token: accessToken.value,
     });
     if (!result.error) {
       session = result.data.session;
+      if (session) {
+        setAuthSessionCookies(Astro.cookies, session);
+      }
     }
   } catch (error) {
     // Session is already null, no need to handle error
