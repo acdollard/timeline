@@ -94,15 +94,15 @@ Delete photo
        │ file_path
        ▼
 ┌──────────────────┐
-│  Storage Bucket  │  ← Step 2: Delete file from bucket
-│  remove(file_path)│    remove([file_path])
+│  event_photos    │  ← Step 2: Delete record from table
+│  table            │     DELETE WHERE id = '...'
+│  delete(id)      │
 └──────────────────┘
        │
        ▼
 ┌──────────────────┐
-│  event_photos    │  ← Step 3: Delete record from table
-│  table            │     DELETE WHERE id = '...'
-│  delete(id)      │
+│  Storage Bucket  │  ← Step 3: Delete file from bucket
+│  remove(file_path)│    remove([file_path])
 └──────────────────┘
 ```
 
@@ -135,7 +135,7 @@ Since the bucket is **private**, you can't use direct URLs. Instead:
 Most operations involve **both** the table and bucket:
 
 - **Upload**: Bucket first → Table second
-- **Delete**: Table lookup → Bucket deletion → Table deletion
+- **Delete**: Table lookup → Table deletion → Bucket deletion
 - **Read**: Table query → Generate signed URL from bucket
 
 ### 4. Data Integrity
