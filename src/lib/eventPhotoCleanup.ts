@@ -7,6 +7,23 @@ type PhotoRecord = {
   file_path: string | null;
 };
 
+async function removeStorageObjects(
+  supabaseClient: SupabaseClient,
+  filePaths: string[]
+): Promise<void> {
+  if (filePaths.length === 0) {
+    return;
+  }
+
+  const { error } = await supabaseClient.storage
+    .from(BUCKET_NAME)
+    .remove(filePaths);
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function deletePhotoForUser(
   supabaseClient: SupabaseClient,
   photoId: string,
@@ -27,16 +44,6 @@ export async function deletePhotoForUser(
     return false;
   }
 
-  if (photo.file_path) {
-    const { error: storageError } = await supabaseClient.storage
-      .from(BUCKET_NAME)
-      .remove([photo.file_path]);
-
-    if (storageError) {
-      throw storageError;
-    }
-  }
-
   const { error: deleteError } = await supabaseClient
     .from('event_photos')
     .delete()
@@ -46,6 +53,11 @@ export async function deletePhotoForUser(
   if (deleteError) {
     throw deleteError;
   }
+
+  await removeStorageObjects(
+    supabaseClient,
+    photo.file_path ? [photo.file_path] : []
+  );
 
   return true;
 }
@@ -69,16 +81,6 @@ export async function deleteEventPhotosForUser(
     .map((photo: PhotoRecord) => photo.file_path)
     .filter((filePath): filePath is string => Boolean(filePath));
 
-  if (filePaths.length > 0) {
-    const { error: storageError } = await supabaseClient.storage
-      .from(BUCKET_NAME)
-      .remove(filePaths);
-
-    if (storageError) {
-      throw storageError;
-    }
-  }
-
   if (photos && photos.length > 0) {
     const { error: deleteError } = await supabaseClient
       .from('event_photos')
@@ -90,4 +92,57 @@ export async function deleteEventPhotosForUser(
       throw deleteError;
     }
   }
+
+  await removeStorageObjects(supabaseClient, filePaths);
+}
+
+export async function deleteOwnedEventWithPhotos(
+  supabaseClient: SupabaseClient,
+  eventId: string,
+  userId: string
+): Promise<boolean> {
+  const { data: photos, error: fetchError } = await supabaseClient
+    .from('event_photos')
+    .select('id, file_path')
+    .eq('event_id', eventId)
+    .eq('user_id', userId);
+
+  if (fetchError) {
+    throw fetchError;
+  }
+
+  const filePaths = (photos || [])
+    .map((photo: PhotoRecord) => photo.file_path)
+    .filter((filePath): filePath is string => Boolean(filePath));
+
+  const { data: deletedEvents, error: deleteEventError } = await supabaseClient
+    .from('events')
+    .delete()
+    .eq('id', eventId)
+    .eq('user_id', userId)
+    .select('id');
+
+  if (deleteEventError) {
+    throw deleteEventError;
+  }
+
+  if (!deletedEvents || deletedEvents.length === 0) {
+    return false;
+  }
+
+  if (photos && photos.length > 0) {
+    const { error: deletePhotoError } = await supabaseClient
+      .from('event_photos')
+      .delete()
+      .eq('event_id', eventId)
+      .eq('user_id', userId);
+
+    if (deletePhotoError) {
+      throw deletePhotoError;
+    }
+  }
+
+  await removeStorageObjects(supabaseClient, filePaths);
+
+  return true;
 }

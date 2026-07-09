@@ -243,14 +243,12 @@ import Layout from "../layouts/Layout.astro";
       if (type === "recovery") {
         // Password reset token - redirect to reset-password
         const newUrl = new URL("/reset-password", window.location.origin);
-        newUrl.searchParams.set("access_token", accessToken);
-        newUrl.searchParams.set("refresh_token", refreshToken);
+        newUrl.hash = window.location.hash.substring(1);
         window.location.href = newUrl.toString();
       } else if (type === "signup") {
         // Email confirmation token - redirect to confirm-email
         const newUrl = new URL("/confirm-email", window.location.origin);
-        newUrl.searchParams.set("access_token", accessToken);
-        newUrl.searchParams.set("refresh_token", refreshToken);
+        newUrl.hash = window.location.hash.substring(1);
         window.location.href = newUrl.toString();
       }
       // If type is unknown or missing, just clear the hash and stay on the page

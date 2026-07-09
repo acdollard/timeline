@@ -1,8 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { supabase } from "../lib/supabase";
+import { createRequestSupabaseClient, setAuthSessionCookies } from "../lib/supabase";
 
-const { cookies, redirect, request } = Astro;
+const { cookies, request } = Astro;
 
 // Get URL parameters
 const url = new URL(request.url);
@@ -11,25 +11,15 @@ const refresh_token = url.searchParams.get("refresh_token");
 const error = url.searchParams.get("error");
 const success = url.searchParams.get("success");
 
-// Check if we have tokens in the hash fragment (client-side)
-const hasHashTokens = url.hash.includes("access_token");
-
-// If no tokens in query params but we have hash tokens, let client-side handle it
-// If no tokens at all, redirect to signin
-if (!access_token || !refresh_token) {
-  if (!hasHashTokens) {
-    return redirect("/signin?error=invalid_confirmation_link");
-  }
-  // If we have hash tokens, continue to render the page with client-side script
-}
-
-// Set the session with the tokens from the email (only if we have query params)
+// Query-token support is kept for old links. New links keep tokens in the URL hash
+// and the browser sends them to /api/auth/confirm-email in a POST body.
 let session = null;
 let sessionError = null;
 let isConfirmed = false;
 
 if (access_token && refresh_token) {
-  const sessionResult = await supabase.auth.setSession({
+  const supabaseClient = createRequestSupabaseClient();
+  const sessionResult = await supabaseClient.auth.setSession({
     access_token,
     refresh_token,
   });
@@ -39,27 +29,10 @@ if (access_token && refresh_token) {
   // If session is set successfully, email is confirmed
   if (session && !sessionError) {
     isConfirmed = true;
-    
-    // Set cookies for persistent session
-    cookies.set("sb-access-token", access_token, {
-      path: "/",
-      secure: true,
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
-    
-    cookies.set("sb-refresh-token", refresh_token, {
-      path: "/",
-      secure: true,
-      httpOnly: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-    });
+    setAuthSessionCookies(cookies, session);
   }
 }
 
-// If we have hash tokens but no query tokens, let client-side handle the session
 // If we have query tokens but session failed, show error
 if (access_token && refresh_token && (sessionError || !session)) {
   // Don't redirect, show error message instead
@@ -151,37 +124,43 @@ const getSuccessMessage = (success: string | null) => {
     </div>
   </div>
 
-  {hasHashTokens && (
-    <script>
-      // Extract tokens from hash fragment and redirect to confirm-email with query params
-      const hash = window.location.hash.substring(1); // Remove the #
-      const params = new URLSearchParams(hash);
-      
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token');
-      const type = params.get('type');
-      
-      if (accessToken && refreshToken) {
-        // Only process if this is a signup confirmation (type=signup)
-        // If it's a recovery token, redirect to reset-password instead
-        if (type === 'recovery') {
-          const newUrl = new URL('/reset-password', window.location.origin);
-          newUrl.searchParams.set('access_token', accessToken);
-          newUrl.searchParams.set('refresh_token', refreshToken);
-          window.location.href = newUrl.toString();
-        } else {
-          // This is an email confirmation, redirect to confirm-email with tokens
-          const newUrl = new URL('/confirm-email', window.location.origin);
-          newUrl.searchParams.set('access_token', accessToken);
-          newUrl.searchParams.set('refresh_token', refreshToken);
-          window.location.href = newUrl.toString();
-        }
+  <script>
+    const params = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const type = params.get('type');
+
+    if (accessToken && refreshToken) {
+      window.history.replaceState(null, '', window.location.pathname);
+
+      if (type === 'recovery') {
+        const newUrl = new URL('/reset-password', window.location.origin);
+        newUrl.hash = params.toString();
+        window.location.href = newUrl.toString();
       } else {
-        // If no tokens in hash, redirect to signin
-        window.location.href = '/signin?error=invalid_confirmation_link';
+        fetch('/api/auth/confirm-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          }),
+        }).then((response) => {
+          if (response.ok) {
+            window.location.href = '/';
+          } else {
+            window.location.href = '/signin?error=invalid_confirmation_link';
+          }
+        }).catch(() => {
+          window.location.href = '/signin?error=invalid_confirmation_link';
+        });
       }
-    </script>
-  )}
+    } else if (!new URLSearchParams(window.location.search).has('access_token')) {
+      window.location.href = '/signin?error=invalid_confirmation_link';
+    }
+  </script>
 
   {isConfirmed && (
     <script>
