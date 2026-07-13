@@ -7,6 +7,26 @@ type PhotoRecord = {
   file_path: string | null;
 };
 
+type FilePathRecord = {
+  file_path: string | null;
+};
+
+async function removeStorageFiles(supabaseClient: SupabaseClient, filePaths: string[]): Promise<void> {
+  const uniquePaths = [...new Set(filePaths)];
+
+  if (uniquePaths.length === 0) {
+    return;
+  }
+
+  const { error } = await supabaseClient.storage
+    .from(BUCKET_NAME)
+    .remove(uniquePaths);
+
+  if (error) {
+    console.warn('Failed to remove event photo storage objects after database deletion:', error);
+  }
+}
+
 export async function deletePhotoForUser(
   supabaseClient: SupabaseClient,
   photoId: string,
@@ -27,16 +47,6 @@ export async function deletePhotoForUser(
     return false;
   }
 
-  if (photo.file_path) {
-    const { error: storageError } = await supabaseClient.storage
-      .from(BUCKET_NAME)
-      .remove([photo.file_path]);
-
-    if (storageError) {
-      throw storageError;
-    }
-  }
-
   const { error: deleteError } = await supabaseClient
     .from('event_photos')
     .delete()
@@ -45,6 +55,10 @@ export async function deletePhotoForUser(
 
   if (deleteError) {
     throw deleteError;
+  }
+
+  if (photo.file_path) {
+    await removeStorageFiles(supabaseClient, [photo.file_path]);
   }
 
   return true;
@@ -69,16 +83,6 @@ export async function deleteEventPhotosForUser(
     .map((photo: PhotoRecord) => photo.file_path)
     .filter((filePath): filePath is string => Boolean(filePath));
 
-  if (filePaths.length > 0) {
-    const { error: storageError } = await supabaseClient.storage
-      .from(BUCKET_NAME)
-      .remove(filePaths);
-
-    if (storageError) {
-      throw storageError;
-    }
-  }
-
   if (photos && photos.length > 0) {
     const { error: deleteError } = await supabaseClient
       .from('event_photos')
@@ -90,4 +94,27 @@ export async function deleteEventPhotosForUser(
       throw deleteError;
     }
   }
+
+  await removeStorageFiles(supabaseClient, filePaths);
+}
+
+export async function deleteOwnedEventWithPhotos(
+  supabaseClient: SupabaseClient,
+  eventId: string,
+  userId: string
+): Promise<void> {
+  const { data, error } = await supabaseClient.rpc('delete_owned_event_with_photos', {
+    p_event_id: eventId,
+    p_user_id: userId,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  const filePaths = ((data || []) as FilePathRecord[])
+    .map((photo) => photo.file_path)
+    .filter((filePath): filePath is string => Boolean(filePath));
+
+  await removeStorageFiles(supabaseClient, filePaths);
 }
