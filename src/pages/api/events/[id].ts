@@ -14,6 +14,11 @@ function stripReadonlyEventFields(event: any) {
   return updates;
 }
 
+function isBirthEventRecord(event: any): boolean {
+  const eventType = Array.isArray(event.event_types) ? event.event_types[0] : event.event_types;
+  return event.type === 'birth' || eventType?.name === 'birth';
+}
+
 export const GET: APIRoute = async ({ params, cookies }) => {
   try {
     const id = params.id;
@@ -135,6 +140,28 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
     }
 
     const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+
+    const { data: event, error: eventError } = await supabaseClient
+      .from('events')
+      .select(`
+        id,
+        type,
+        event_types (
+          name
+        )
+      `)
+      .eq('id', id)
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    if (eventError) throw eventError;
+    if (!event) {
+      return jsonResponse({ error: 'Event not found' }, 404);
+    }
+
+    if (isBirthEventRecord(event)) {
+      return jsonResponse({ error: 'Birth event cannot be deleted' }, 400);
+    }
 
     await deleteEventPhotosForUser(supabaseClient, id, session.user.id);
 

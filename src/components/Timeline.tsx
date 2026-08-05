@@ -221,6 +221,15 @@ const Timeline = ({
     setShowModal(true);
   };
 
+  // Create mode must not reuse a previously selected event; otherwise photo
+  // uploads for the new event attach to the old event's id.
+  useEffect(() => {
+    if (showFormModal && !showUpdateForm) {
+      setShowModal(false);
+      setSelectedEvent(null);
+    }
+  }, [showFormModal, showUpdateForm]);
+
   const handleUpdate = async (event: Omit<TimelineEvent, 'id'>) => {
     if (selectedEvent) {
       await handleUpdateEvent(selectedEvent.id, event);
@@ -393,10 +402,11 @@ const Timeline = ({
         }}
         onSubmit={showUpdateForm ? handleUpdate : handleCreateEvent}
         onDelete={handleDelete}
-        initialEvent={selectedEvent || undefined}
+        initialEvent={showUpdateForm ? selectedEvent || undefined : undefined}
         eventTypes={eventTypes}
         onRefreshEventTypes={onRefreshEventTypes}
         onRefreshEvents={onRefreshEvents}
+        isBirthEvent={showUpdateForm && selectedEvent ? isBirthEvent(selectedEvent) : false}
       />
       <CreateEventTypeModal
         isOpen={showCreateEventTypeModal}

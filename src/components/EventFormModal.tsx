@@ -19,8 +19,11 @@ interface EventFormModalProps {
 }
 
 const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eventTypes, onRefreshEventTypes, onRefreshEvents, isBirthEvent }: EventFormModalProps) => {
+  const isBirthMode = Boolean(
+    isBirthEvent || initialEvent?.event_types?.name === 'birth' || initialEvent?.type === 'birth'
+  );
   const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>({
-    name: isBirthEvent ? 'Birth' : '',
+    name: isBirthMode ? 'Birth' : '',
     date: '',
     event_type_id: '',
     type: '',
@@ -38,7 +41,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
 
   useEffect(() => {
     setBirthEventType(eventTypes.find((type: EventType) => type.name === 'birth') || null);
-  }, []);
+  }, [eventTypes]);
 
   useEffect(() => {
     if (initialEvent) {
@@ -55,7 +58,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
     } else {
       // Reset form for new events
       setFormData({
-        name: isBirthEvent ? 'Birth' : '',
+        name: isBirthMode ? 'Birth' : '',
         date: '',
         event_type_id: '',
         type: '',
@@ -64,7 +67,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
       setExistingPhotos([]);
       setPhotos([]);
     }
-  }, [initialEvent]);
+  }, [initialEvent, isBirthMode]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -228,7 +231,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
     >
       <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <h2 className="text-white text-xl font-semibold mb-4">
-          {(initialEvent && !isBirthEvent) ? 'Update Event' : isBirthEvent ? 'When Were You Born?' : 'Create New Event'}
+          {(initialEvent && !isBirthMode) ? 'Update Event' : isBirthMode ? 'When Were You Born?' : 'Create New Event'}
         </h2>
         {formError && (
           <div className="mb-4 bg-red-900/50 border border-red-600 text-red-200 px-3 py-2 rounded text-sm">
@@ -236,7 +239,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isBirthEvent && (
+          {!isBirthMode && (
           <div>
             <label className="block text-white mb-1">Event Name</label>
             <input
@@ -248,7 +251,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
             />
           </div>
           )}
-          {isBirthEvent && (
+          {isBirthMode && (
               <div>
               <label className="block text-white mb-1">Event Name</label>
               <input
@@ -291,21 +294,21 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
               required
             >
               <option value="">Select an event type</option>
-              {!isBirthEvent && eventTypes
+              {!isBirthMode && eventTypes
                 .filter((type: EventType) => type.name !== 'birth')
                 .map((type: EventType) => (
                   <option key={type.id} value={type.id}>
                     {type.displayName}
                   </option>
                 ))}
-              {isBirthEvent && (
+              {isBirthMode && (
                 <option key={birthEventType?.id} value={birthEventType?.id}>
                   {birthEventType?.displayName}
                 </option>
               )}
             </select>
           </div>
-          {!isBirthEvent && <div>
+          {!isBirthMode && <div>
             <label className="block text-white mb-1">Description</label>
             <textarea
               value={formData.description}
@@ -403,11 +406,11 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
                 ? 'Uploading photos...' 
                 : isLoading 
                   ? 'Saving...' 
-                  : (initialEvent && !isBirthEvent ? 'Update Event' : isBirthEvent ? 'Save' : 'Create Event')
+                  : (initialEvent && !isBirthMode ? 'Update Event' : isBirthMode ? 'Save' : 'Create Event')
               }
             </button>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 order-2 sm:order-2">
-              {initialEvent && onDelete && (
+              {initialEvent && onDelete && !isBirthMode && (
                 <button
                   type="button"
                   onClick={handleDelete}
