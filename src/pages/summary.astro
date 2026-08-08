@@ -3,19 +3,14 @@ import Layout from "../layouts/Layout.astro";
 import { getAuthenticatedRequest } from "../lib/supabase";
 import TimelineContainer from "../components/TimelineContainer";
 
-let session = null;
-let supabaseClient = null;
+let auth;
 try {
-  const authenticatedRequest = await getAuthenticatedRequest(Astro.cookies);
-  session = authenticatedRequest.session;
-  supabaseClient = authenticatedRequest.supabaseClient;
+  auth = await getAuthenticatedRequest(Astro.cookies);
 } catch (error) {
-  // Session is already null, no need to handle error
-}
-
-if (!session || !supabaseClient) {
   return Astro.redirect("/signin");
 }
+
+const { supabaseClient, session } = auth;
 
 // Get initial events for the user
 const { data: eventsData } = await supabaseClient

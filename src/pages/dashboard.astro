@@ -2,17 +2,9 @@
 import Layout from "../layouts/Layout.astro";
 import { getAuthenticatedRequest } from "../lib/supabase";
 
-const accessToken = Astro.cookies.get("sb-access-token");
-const refreshToken = Astro.cookies.get("sb-refresh-token");
-
-if (!accessToken || !refreshToken) {
-  return Astro.redirect("/signin");
-}
-
-let session;
+let auth;
 try {
-  const result = await getAuthenticatedRequest(Astro.cookies);
-  session = result.session;
+  auth = await getAuthenticatedRequest(Astro.cookies);
 } catch (error) {
   Astro.cookies.delete("sb-access-token", {
     path: "/",
@@ -23,7 +15,7 @@ try {
   return Astro.redirect("/signin");
 }
 
-const email = session.user?.email;
+const email = auth.session.user?.email;
 ---
 
 <Layout title="dashboard">

@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { createRequestSupabaseClient } from '../../../lib/supabase';
 import { logger } from '../../../utils/logger';
 
-export const POST: APIRoute = async ({ request, cookies, redirect }) => {
+export const POST: APIRoute = async ({ request, redirect }) => {
   try {
     const formData = await request.formData();
     const email = formData.get('email') as string;

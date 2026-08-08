@@ -15,8 +15,8 @@ export const POST: APIRoute = async ({ request, redirect }) => {
   try {
     // Get the origin URL for email redirect
     const origin = new URL(request.url).origin;
-    
     const supabaseClient = createRequestSupabaseClient();
+    
     const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,

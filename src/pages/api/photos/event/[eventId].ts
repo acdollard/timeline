@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
+import { deleteEventPhotosForUser } from '../../../../lib/eventPhotoCleanup';
 import { AuthenticationError, getAuthenticatedRequest } from '../../../../lib/supabase';
-
-const BUCKET_NAME = 'event-photos';
 
 export const DELETE: APIRoute = async ({ params, cookies }) => {
   try {
@@ -14,51 +13,7 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
     }
 
     const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
-    const userId = session.user.id;
-
-    // Fetch photos to delete
-    const { data: photos, error: fetchError } = await supabaseClient
-      .from('event_photos')
-      .select('id, file_path')
-      .eq('event_id', eventId)
-      .eq('user_id', userId);
-
-    if (fetchError) {
-      console.error('Failed to fetch event photos:', fetchError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch event photos' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    if (photos && photos.length > 0) {
-      const filePaths = photos.map((photo) => photo.file_path);
-      const { error: storageError } = await supabaseClient.storage
-        .from(BUCKET_NAME)
-        .remove(filePaths);
-
-      if (storageError) {
-        console.error('Failed to delete photos from storage:', storageError);
-        return new Response(JSON.stringify({ error: 'Failed to delete photos from storage' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      const { error: deleteError } = await supabaseClient
-        .from('event_photos')
-        .delete()
-        .eq('event_id', eventId)
-        .eq('user_id', userId);
-
-      if (deleteError) {
-        console.error('Failed to delete photo metadata:', deleteError);
-        return new Response(JSON.stringify({ error: 'Failed to delete photo metadata' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-    }
+    await deleteEventPhotosForUser(supabaseClient, eventId, session.user.id);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

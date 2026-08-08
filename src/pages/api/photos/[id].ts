@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
+import { deletePhotoForUser } from '../../../lib/eventPhotoCleanup';
 import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
-
-const BUCKET_NAME = 'event-photos';
 
 export const DELETE: APIRoute = async ({ params, cookies }) => {
   try {
@@ -14,47 +13,11 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
     }
 
     const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
-    const userId = session.user.id;
+    const deleted = await deletePhotoForUser(supabaseClient, photoId, session.user.id);
 
-    // Fetch photo to ensure it belongs to the user and get file path
-    const { data: photo, error: photoError } = await supabaseClient
-      .from('event_photos')
-      .select('id, file_path, event_id, user_id')
-      .eq('id', photoId)
-      .eq('user_id', userId)
-      .single();
-
-    if (photoError || !photo) {
+    if (!deleted) {
       return new Response(JSON.stringify({ error: 'Photo not found or access denied' }), {
         status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Delete file from storage
-    const { error: storageError } = await supabaseClient.storage
-      .from(BUCKET_NAME)
-      .remove([photo.file_path]);
-
-    if (storageError) {
-      console.error('Failed to delete photo from storage:', storageError);
-      return new Response(JSON.stringify({ error: 'Failed to delete photo from storage' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Delete database record
-    const { error: deleteError } = await supabaseClient
-      .from('event_photos')
-      .delete()
-      .eq('id', photoId)
-      .eq('user_id', userId);
-
-    if (deleteError) {
-      console.error('Failed to delete photo metadata:', deleteError);
-      return new Response(JSON.stringify({ error: 'Failed to delete photo metadata' }), {
-        status: 500,
         headers: { 'Content-Type': 'application/json' }
       });
     }

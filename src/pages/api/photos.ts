@@ -63,7 +63,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 
     // Convert File to ArrayBuffer for Supabase storage
     const arrayBuffer = await file.arrayBuffer();
-    const { data: uploadData, error: uploadError } = await supabaseClient.storage
+    const { error: uploadError } = await supabaseClient.storage
       .from(BUCKET_NAME)
       .upload(filePath, arrayBuffer, {
         contentType: file.type,

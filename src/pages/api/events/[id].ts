@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { deleteEventForUser } from '../../../lib/eventPhotoCleanup';
 import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -133,15 +134,9 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       return jsonResponse({ error: 'Event ID is required' }, 400);
     }
 
-    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+    const { supabaseClient } = await getAuthenticatedRequest(cookies);
 
-    const { error } = await supabaseClient
-      .from('events')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', session.user.id);
-
-    if (error) throw error;
+    await deleteEventForUser(supabaseClient, id);
 
     return new Response(null, { status: 204 });
   } catch (error) {

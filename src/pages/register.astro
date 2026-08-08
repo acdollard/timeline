@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { getAuthenticatedRequest } from "../lib/supabase";
+import { getSessionFromCookies } from "../lib/supabase";
 
 const { cookies, redirect, request } = Astro;
 
@@ -8,20 +8,12 @@ const { cookies, redirect, request } = Astro;
 const url = new URL(request.url);
 const error = url.searchParams.get("error");
 
-// If user is already logged in, redirect to home
-const accessToken = cookies.get("sb-access-token");
-const refreshToken = cookies.get("sb-refresh-token");
-
-if (accessToken && refreshToken) {
-  try {
-    const { session } = await getAuthenticatedRequest(cookies);
-
-    if (session) {
-      return redirect("/");
-    }
-  } catch (e) {
-    console.error("Error validating session:", e);
+try {
+  if (await getSessionFromCookies(cookies)) {
+    return redirect("/");
   }
+} catch (e) {
+  console.error("Error validating session:", e);
 }
 
 // Helper function to get error message

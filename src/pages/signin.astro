@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { getAuthenticatedRequest } from "../lib/supabase";
+import { getSessionFromCookies } from "../lib/supabase";
 
 const { cookies, redirect, request } = Astro;
 
@@ -10,22 +10,13 @@ const error = url.searchParams.get("error");
 const success = url.searchParams.get("success");
 const message = url.searchParams.get("message");
 
-// Get tokens from cookies
-const accessToken = cookies.get("sb-access-token");
-const refreshToken = cookies.get("sb-refresh-token");
-
-// Only redirect if we have both tokens and they're valid
-if (accessToken && refreshToken) {
-  try {
-    const { session } = await getAuthenticatedRequest(cookies);
-
-    if (session) {
-      return redirect("/");
-    }
-  } catch (e) {
-    // If there's an error validating the session, continue to show the signin page
-    console.error("Error validating session:", e);
+try {
+  if (await getSessionFromCookies(cookies)) {
+    return redirect("/");
   }
+} catch (e) {
+  // If there's an error validating the session, continue to show the signin page.
+  console.error("Error validating session:", e);
 }
 
 // Helper function to get error message
