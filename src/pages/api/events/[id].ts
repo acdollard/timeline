@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { deleteEventPhotosForUser } from '../../../lib/eventPhotoCleanup';
+import { deleteEventForUser } from '../../../lib/eventPhotoCleanup';
 import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -12,6 +12,11 @@ function jsonResponse(body: unknown, status: number): Response {
 function stripReadonlyEventFields(event: any) {
   const { id, user_id, event_types, event_photos, photos, created_at, updated_at, ...updates } = event;
   return updates;
+}
+
+function isBirthEventRecord(event: any): boolean {
+  const eventType = Array.isArray(event.event_types) ? event.event_types[0] : event.event_types;
+  return event.type === 'birth' || eventType?.name === 'birth';
 }
 
 export const GET: APIRoute = async ({ params, cookies }) => {
@@ -134,17 +139,9 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       return jsonResponse({ error: 'Event ID is required' }, 400);
     }
 
-    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+    const { supabaseClient } = await getAuthenticatedRequest(cookies);
 
-    await deleteEventPhotosForUser(supabaseClient, id, session.user.id);
-
-    const { error } = await supabaseClient
-      .from('events')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', session.user.id);
-
-    if (error) throw error;
+    await deleteEventForUser(supabaseClient, id);
 
     return new Response(null, { status: 204 });
   } catch (error) {
