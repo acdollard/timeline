@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { createRequestSupabaseClient } from '../../lib/supabase';
 import { logger } from '../../utils/logger';
 
 export const GET: APIRoute = async () => {
@@ -15,10 +15,10 @@ export const GET: APIRoute = async () => {
 
   try {
     // Check database connection
-    const { data, error } = await supabase
+    const supabaseClient = createRequestSupabaseClient();
+    const { error } = await supabaseClient
       .from('events')
-      .select('count')
-      .limit(1);
+      .select('id', { count: 'exact', head: true });
 
     if (error) {
       healthCheck.checks.database = 'unhealthy';
