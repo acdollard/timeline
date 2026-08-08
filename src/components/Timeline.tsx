@@ -221,8 +221,6 @@ const Timeline = ({
     setShowModal(true);
   };
 
-  // Create mode must not reuse a previously selected event; otherwise photo
-  // uploads for the new event attach to the old event's id.
   useEffect(() => {
     if (showFormModal && !showUpdateForm) {
       setShowModal(false);

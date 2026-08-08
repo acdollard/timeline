@@ -1,13 +1,13 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../lib/supabase';
+import { createRequestSupabaseClient } from '../../lib/supabase';
 
 export const GET: APIRoute = async () => {
   try {
     // Test Supabase connection
-    const { data, error } = await supabase
+    const supabaseClient = createRequestSupabaseClient();
+    const { error } = await supabaseClient
       .from('events')
-      .select('*')
-      .limit(5);
+      .select('id', { count: 'exact', head: true });
 
     if (error) {
       console.error('Supabase connection test failed:', error);
@@ -25,12 +25,9 @@ export const GET: APIRoute = async () => {
       });
     }
 
-    console.log('Raw data from Supabase:', data);
-
     return new Response(JSON.stringify({
       status: 'success',
       message: 'Successfully connected to Supabase',
-      data: data,
       config: {
         url: import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Not Set',
         key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Set' : 'Not Set'

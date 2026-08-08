@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { deleteEventPhotosForUser } from '../../../lib/eventPhotoCleanup';
+import { deleteEventForUser } from '../../../lib/eventPhotoCleanup';
 import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -139,39 +139,9 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       return jsonResponse({ error: 'Event ID is required' }, 400);
     }
 
-    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+    const { supabaseClient } = await getAuthenticatedRequest(cookies);
 
-    const { data: event, error: eventError } = await supabaseClient
-      .from('events')
-      .select(`
-        id,
-        type,
-        event_types (
-          name
-        )
-      `)
-      .eq('id', id)
-      .eq('user_id', session.user.id)
-      .maybeSingle();
-
-    if (eventError) throw eventError;
-    if (!event) {
-      return jsonResponse({ error: 'Event not found' }, 404);
-    }
-
-    if (isBirthEventRecord(event)) {
-      return jsonResponse({ error: 'Birth event cannot be deleted' }, 400);
-    }
-
-    await deleteEventPhotosForUser(supabaseClient, id, session.user.id);
-
-    const { error } = await supabaseClient
-      .from('events')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', session.user.id);
-
-    if (error) throw error;
+    await deleteEventForUser(supabaseClient, id);
 
     return new Response(null, { status: 204 });
   } catch (error) {
