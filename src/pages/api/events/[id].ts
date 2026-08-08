@@ -14,6 +14,11 @@ function stripReadonlyEventFields(event: any) {
   return updates;
 }
 
+function isBirthEventRecord(event: any): boolean {
+  const eventType = Array.isArray(event.event_types) ? event.event_types[0] : event.event_types;
+  return event.type === 'birth' || eventType?.name === 'birth';
+}
+
 export const GET: APIRoute = async ({ params, cookies }) => {
   try {
     const id = params.id;
