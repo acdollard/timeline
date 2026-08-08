@@ -230,7 +230,8 @@ import Layout from "../layouts/Layout.astro";
 
 <!-- Handle authentication tokens from email links (if Site URL is set to root) -->
 <script>
-  // Check for hash tokens on page load (from Supabase email links)
+  // Supabase email links put tokens in the hash. Preserve the fragment when
+  // routing — never copy tokens into query params (server logs / referrers).
   if (window.location.hash && window.location.hash.includes("access_token")) {
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
@@ -241,20 +242,11 @@ import Layout from "../layouts/Layout.astro";
 
     if (accessToken && refreshToken) {
       if (type === "recovery") {
-        // Password reset token - redirect to reset-password
-        const newUrl = new URL("/reset-password", window.location.origin);
-        newUrl.searchParams.set("access_token", accessToken);
-        newUrl.searchParams.set("refresh_token", refreshToken);
-        window.location.href = newUrl.toString();
+        window.location.replace(`/reset-password${window.location.hash}`);
       } else if (type === "signup") {
-        // Email confirmation token - redirect to confirm-email
-        const newUrl = new URL("/confirm-email", window.location.origin);
-        newUrl.searchParams.set("access_token", accessToken);
-        newUrl.searchParams.set("refresh_token", refreshToken);
-        window.location.href = newUrl.toString();
+        window.location.replace(`/confirm-email${window.location.hash}`);
       }
-      // If type is unknown or missing, just clear the hash and stay on the page
-      // (might be a legitimate user just visiting the site)
+      // If type is unknown or missing, leave the hash alone and stay put.
     }
   }
 </script>
