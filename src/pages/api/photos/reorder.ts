@@ -36,17 +36,25 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       });
     }
 
-    const updates = photoIds.map((photoId, index) => ({ id: photoId, sort_order: index }));
-    const { error: updateError } = await supabaseClient
-      .from('event_photos')
-      .upsert(updates, { onConflict: 'id' });
+    // Partial upserts cannot update only sort_order: PostgREST still builds an
+    // INSERT row for the provided columns, so NOT NULL fields like event_id /
+    // user_id / file_path become null and the request fails (or corrupts rows if
+    // those columns are nullable). Update each owned row instead.
+    for (let index = 0; index < photoIds.length; index++) {
+      const photoId = photoIds[index];
+      const { error: updateError } = await supabaseClient
+        .from('event_photos')
+        .update({ sort_order: index })
+        .eq('id', photoId)
+        .eq('user_id', userId);
 
-    if (updateError) {
-      console.error('Failed to update photo order:', updateError);
-      return new Response(JSON.stringify({ error: 'Failed to update photo order' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      if (updateError) {
+        console.error('Failed to update photo order:', updateError);
+        return new Response(JSON.stringify({ error: 'Failed to update photo order' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
