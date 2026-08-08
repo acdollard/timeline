@@ -18,14 +18,16 @@ interface EventFormModalProps {
   isBirthEvent?: boolean;
 }
 
+const createEmptyEventDraft = (isBirthEvent?: boolean): Omit<TimelineEvent, 'id'> => ({
+  name: isBirthEvent ? 'Birth' : '',
+  date: '',
+  event_type_id: '',
+  type: '',
+  description: ''
+});
+
 const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eventTypes, onRefreshEventTypes, onRefreshEvents, isBirthEvent }: EventFormModalProps) => {
-  const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>({
-    name: isBirthEvent ? 'Birth' : '',
-    date: '',
-    event_type_id: '',
-    type: '',
-    description: ''
-  });
+  const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>(() => createEmptyEventDraft(isBirthEvent));
   const [photos, setPhotos] = useState<File[]>([]);
   const [existingPhotos, setExistingPhotos] = useState<EventPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +37,14 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
   const [formError, setFormError] = useState<string | null>(null);
   const [showCreateEventTypeModal, setShowCreateEventTypeModal] = useState(false);
   const [birthEventType, setBirthEventType] = useState<EventType | null>(null);
+  const [createdEventId, setCreatedEventId] = useState<string | null>(null);
+
+  const resetDraftState = () => {
+    setFormData(createEmptyEventDraft(isBirthEvent));
+    setExistingPhotos([]);
+    setPhotos([]);
+    setCreatedEventId(null);
+  };
 
   useEffect(() => {
     setBirthEventType(eventTypes.find((type: EventType) => type.name === 'birth') || null);
@@ -54,17 +64,12 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
       setPhotos([]);
     } else {
       // Reset form for new events
-      setFormData({
-        name: isBirthEvent ? 'Birth' : '',
-        date: '',
-        event_type_id: '',
-        type: '',
-        description: ''
-      });
+      setFormData(createEmptyEventDraft(isBirthEvent));
       setExistingPhotos([]);
       setPhotos([]);
     }
-  }, [initialEvent]);
+    setCreatedEventId(null);
+  }, [initialEvent, isBirthEvent]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -134,18 +139,25 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
       setFormError(null);
       setIsLoading(true);
       
-      const resultEvent = await onSubmit(formData);
-      const eventId = initialEvent?.id || (resultEvent && 'id' in resultEvent ? resultEvent.id : undefined);
+      const retryingCreatedEventPhotos = !initialEvent && createdEventId;
+      const resultEvent = retryingCreatedEventPhotos ? undefined : await onSubmit(formData);
+      const eventId = initialEvent?.id || createdEventId || (resultEvent && 'id' in resultEvent ? resultEvent.id : undefined);
 
       if (!initialEvent && !eventId) {
         throw new Error('Event ID missing after create');
       }
+      if (!initialEvent && eventId) {
+        setCreatedEventId(eventId);
+      }
       
       if (photos.length > 0 && eventId) {
         setIsUploadingPhotos(true);
+        const remainingPhotos = [...photos];
         try {
-          for (const photo of photos) {
+          for (const photo of [...photos]) {
             const uploaded = await photoService.uploadPhoto(eventId, photo);
+            remainingPhotos.shift();
+            setPhotos([...remainingPhotos]);
             if (initialEvent) {
               setExistingPhotos(prev => [...prev, uploaded.photo]);
             }
@@ -161,20 +173,13 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
         } catch (photoError) {
           console.error('Error uploading photos:', photoError);
           const action = initialEvent ? 'updated' : 'created';
-          setFormError(`Event ${action}, but some photos failed to upload. You can add them later.`);
+          setFormError(`Event ${action}, but some photos failed to upload. Keep this form open and save again to upload the remaining photos.`);
+          return;
         } finally {
           setIsUploadingPhotos(false);
         }
       }
-      setFormData({
-        name: '',
-        date: '',
-        event_type_id: '',
-        type: '',
-        description: ''
-      });
-      setExistingPhotos([]);
-      setPhotos([]);
+      resetDraftState();
       onClose();
     } catch (error) {
       console.error('Failed to submit event:', error);
@@ -420,13 +425,8 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
               <button
                 type="button"
                 onClick={() => {
-                  setFormData({
-                    name: '',
-                    date: '',
-                    event_type_id: '',
-                    type: '',
-                    description: ''
-                  });
+                  resetDraftState();
+                  setFormError(null);
                   onClose();
                 }}
                 disabled={isActionDisabled}
