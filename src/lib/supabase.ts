@@ -13,26 +13,24 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-type CookieStore = {
-  get(name: string): { value: string } | undefined;
-  set?: (
-    name: string,
-    value: string,
-    options: {
-      path: string;
-      secure: boolean;
-      httpOnly: boolean;
-      sameSite: 'lax';
-      maxAge: number;
-    }
-  ) => void;
+type AuthCookieOptions = {
+  path: string;
+  secure: boolean;
+  httpOnly: boolean;
+  sameSite: 'lax';
+  maxAge: number;
 };
 
-const authCookieOptions = {
+type CookieStore = {
+  get(name: string): { value: string } | undefined;
+  set(name: string, value: string, options: AuthCookieOptions): void;
+};
+
+const AUTH_COOKIE_OPTIONS: AuthCookieOptions = {
   path: '/',
   secure: true,
   httpOnly: true,
-  sameSite: 'lax' as const,
+  sameSite: 'lax',
   maxAge: 60 * 60 * 24 * 7,
 };
 
@@ -51,6 +49,11 @@ export function createRequestSupabaseClient(): SupabaseClient {
       detectSessionInUrl: false,
     },
   });
+}
+
+export function setAuthSessionCookies(cookies: CookieStore, session: Session): void {
+  cookies.set('sb-access-token', session.access_token, AUTH_COOKIE_OPTIONS);
+  cookies.set('sb-refresh-token', session.refresh_token, AUTH_COOKIE_OPTIONS);
 }
 
 export async function getAuthenticatedRequest(
@@ -76,15 +79,21 @@ export async function getAuthenticatedRequest(
     throw new AuthenticationError('Invalid session');
   }
 
-  if (cookies.set) {
-    if (session.access_token !== accessToken) {
-      cookies.set('sb-access-token', session.access_token, authCookieOptions);
-    }
-
-    if (session.refresh_token !== refreshToken) {
-      cookies.set('sb-refresh-token', session.refresh_token, authCookieOptions);
-    }
-  }
+  setAuthSessionCookies(cookies, session);
 
   return { supabaseClient, session };
+}
+
+export async function getSessionFromCookies(
+  cookies: CookieStore
+): Promise<{ supabaseClient: SupabaseClient; session: Session } | null> {
+  try {
+    return await getAuthenticatedRequest(cookies);
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      return null;
+    }
+
+    throw error;
+  }
 }
