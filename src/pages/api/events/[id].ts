@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { isBirthEventRecord } from '../../../lib/birthEvent';
 import { deleteEventForUser } from '../../../lib/eventPhotoCleanup';
 import { AuthenticationError, getAuthenticatedRequest } from '../../../lib/supabase';
 
@@ -12,11 +13,6 @@ function jsonResponse(body: unknown, status: number): Response {
 function stripReadonlyEventFields(event: any) {
   const { id, user_id, event_types, event_photos, photos, created_at, updated_at, ...updates } = event;
   return updates;
-}
-
-function isBirthEventRecord(event: any): boolean {
-  const eventType = Array.isArray(event.event_types) ? event.event_types[0] : event.event_types;
-  return event.type === 'birth' || eventType?.name === 'birth';
 }
 
 export const GET: APIRoute = async ({ params, cookies }) => {
@@ -139,7 +135,32 @@ export const DELETE: APIRoute = async ({ params, cookies }) => {
       return jsonResponse({ error: 'Event ID is required' }, 400);
     }
 
-    const { supabaseClient } = await getAuthenticatedRequest(cookies);
+    const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
+
+    // Birth is the timeline anchor; keep the API aligned with the form UI which
+    // hides delete for birth events. The helper exists from a prior fix but was
+    // dropped from this path during a multi-PR merge.
+    const { data: event, error: eventError } = await supabaseClient
+      .from('events')
+      .select(`
+        id,
+        type,
+        event_types (
+          name
+        )
+      `)
+      .eq('id', id)
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    if (eventError) throw eventError;
+    if (!event) {
+      return jsonResponse({ error: 'Event not found' }, 404);
+    }
+
+    if (isBirthEventRecord(event)) {
+      return jsonResponse({ error: 'Birth event cannot be deleted' }, 400);
+    }
 
     await deleteEventForUser(supabaseClient, id);
 
