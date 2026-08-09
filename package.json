@@ -6,7 +6,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "node --experimental-strip-types --test src/lib/birthEvent.test.ts"
   },
   "dependencies": {
     "@astrojs/netlify": "^6.4.0",
