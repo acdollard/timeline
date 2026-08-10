@@ -13,31 +13,35 @@ function frontmatter(relativePath) {
   return match[1];
 }
 
+/** Strip line + block comments so comment text cannot false-positive. */
+function codeOnly(frontmatterSource) {
+  return frontmatterSource
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
 describe('auth email pages SSR frontmatter', () => {
-  it('confirm-email does not reference undeclared SSR token symbols', () => {
-    const fm = frontmatter('src/pages/confirm-email.astro');
+  it('confirm-email does not crash on undeclared SSR token symbols', () => {
+    const code = codeOnly(frontmatter('src/pages/confirm-email.astro'));
     // Merge regression 52198aa reintroduced these without declarations,
     // crashing every SSR render of the confirmation page.
-    for (const symbol of ['access_token', 'refresh_token', 'redirect', 'cookies', 'hasHashTokens']) {
-      assert.equal(
-        fm.includes(symbol),
-        false,
-        `confirm-email frontmatter must not reference undeclared '${symbol}'`
-      );
-    }
-    assert.match(fm, /searchParams\.get\("error"\)/);
+    assert.equal(/\baccess_token\b/.test(code), false);
+    assert.equal(/\brefresh_token\b/.test(code), false);
+    assert.equal(/\bhasHashTokens\b/.test(code), false);
+    assert.equal(/\bredirect\s*\(/.test(code), false);
+    assert.equal(/\bcookies\b/.test(code), false);
+    assert.equal(/\bcreateRequestSupabaseClient\b/.test(code), false);
+    assert.match(code, /searchParams\.get\("error"\)/);
   });
 
-  it('reset-password does not reference undeclared SSR token symbols', () => {
-    const fm = frontmatter('src/pages/reset-password.astro');
-    for (const symbol of ['access_token', 'refresh_token', 'redirect', 'hasHashTokens']) {
-      assert.equal(
-        fm.includes(symbol),
-        false,
-        `reset-password frontmatter must not reference undeclared '${symbol}'`
-      );
-    }
-    assert.match(fm, /searchParams\.get\("error"\)/);
-    assert.match(fm, /searchParams\.get\("success"\)/);
+  it('reset-password does not crash on undeclared SSR token symbols', () => {
+    const code = codeOnly(frontmatter('src/pages/reset-password.astro'));
+    assert.equal(/\baccess_token\b/.test(code), false);
+    assert.equal(/\brefresh_token\b/.test(code), false);
+    assert.equal(/\bhasHashTokens\b/.test(code), false);
+    assert.equal(/\bredirect\s*\(/.test(code), false);
+    assert.equal(/\bcreateRequestSupabaseClient\b/.test(code), false);
+    assert.match(code, /searchParams\.get\("error"\)/);
+    assert.match(code, /searchParams\.get\("success"\)/);
   });
 });
