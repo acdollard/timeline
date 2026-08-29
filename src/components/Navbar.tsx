@@ -1,18 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import type { Session } from '@supabase/supabase-js';
+import React, { useState } from 'react';
 
 interface NavbarProps {
-  initialSession: Session | null;
+  isAuthenticated: boolean;
   currentPath: string;
 }
 
-const Navbar = ({ initialSession, currentPath }: NavbarProps) => {
-  const [session, setSession] = useState<Session | null>(initialSession);
+const Navbar = ({ isAuthenticated, currentPath }: NavbarProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  useEffect(() => {
-    setSession(initialSession);
-  }, [initialSession]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -32,7 +26,7 @@ const Navbar = ({ initialSession, currentPath }: NavbarProps) => {
       <ul className="hidden md:flex flex-row justify-between items-center text-white gap-4">
         <li><a href="/" className="hover:text-primary transition-colors">Home</a></li>
         <li><a href="/about" className="hover:text-primary transition-colors">About</a></li>
-        {session ? (
+        {isAuthenticated ? (
           <>
             <li><a href="/summary" className={`hover:text-primary transition-colors ${currentPath === '/summary' ? 'hidden' : ''}`}>Summary Page</a></li>
             <li>
@@ -95,7 +89,7 @@ const Navbar = ({ initialSession, currentPath }: NavbarProps) => {
               <ul className="flex flex-col space-y-4 text-white">
                 <li><a href="/" className="hover:text-primary transition-colors py-2" onClick={closeMenu}>Home</a></li>
                 <li><a href="/about" className="hover:text-primary transition-colors py-2" onClick={closeMenu}>About</a></li>
-                {session ? (
+                {isAuthenticated ? (
                   <>
                     <li><a href="/summary" className="hover:text-primary transition-colors py-2" onClick={closeMenu}>My Timeline</a></li>
                     <li>
