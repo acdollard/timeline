@@ -38,7 +38,7 @@ if (requireAuth && !session) {
     <title>{title}</title>
   </head>
   <body class="bg-gray-900 min-h-screen">
-    <Navbar client:load initialSession={session} currentPath={currentPath} />
+    <Navbar client:load isAuthenticated={Boolean(session)} currentPath={currentPath} />
     {showBackButton && <BackButton client:load />}
     <main>
       <slot />
