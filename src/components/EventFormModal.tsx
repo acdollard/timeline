@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { isBirthEventRecord } from '../lib/birthEvent';
 import type { TimelineEvent } from '../types/events';
 import type { EventType } from '../types/eventTypes';
 import type { EventPhoto } from '../types/eventPhotos';
@@ -27,7 +28,10 @@ const createEmptyEventDraft = (isBirthEvent?: boolean): Omit<TimelineEvent, 'id'
 });
 
 const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eventTypes, onRefreshEventTypes, onRefreshEvents, isBirthEvent }: EventFormModalProps) => {
-  const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>(() => createEmptyEventDraft(isBirthEvent));
+  // Merge of draft-recovery + birth-mode PRs dropped this binding; without it the
+  // modal throws ReferenceError as soon as it opens (create/update/birth flows).
+  const isBirthMode = Boolean(isBirthEvent || isBirthEventRecord(initialEvent));
+  const [formData, setFormData] = useState<Omit<TimelineEvent, 'id'>>(() => createEmptyEventDraft(isBirthMode));
   const [photos, setPhotos] = useState<File[]>([]);
   const [existingPhotos, setExistingPhotos] = useState<EventPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +44,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
 
   const resetDraftState = () => {
-    setFormData(createEmptyEventDraft(isBirthEvent));
+    setFormData(createEmptyEventDraft(isBirthMode));
     setExistingPhotos([]);
     setPhotos([]);
     setCreatedEventId(null);
@@ -64,12 +68,12 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
       setPhotos([]);
     } else {
       // Reset form for new events
-      setFormData(createEmptyEventDraft(isBirthEvent));
+      setFormData(createEmptyEventDraft(isBirthMode));
       setExistingPhotos([]);
       setPhotos([]);
     }
     setCreatedEventId(null);
-  }, [initialEvent, isBirthEvent]);
+  }, [initialEvent, isBirthMode]);
 
   useEffect(() => {
     if (!isOpen) {
