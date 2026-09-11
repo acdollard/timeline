@@ -7,7 +7,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --experimental-strip-types --test src/layouts/layout-navbar-auth.test.js src/lib/birthEvent.test.ts src/pages/auth-email-pages.test.js src/components/event-form-modal.test.js src/pages/api/events-delete-birth-guard.test.js"
+    "test": "node --experimental-strip-types --test src/layouts/layout-navbar-auth.test.js src/lib/birthEvent.test.ts src/pages/auth-email-pages.test.js src/components/event-form-modal.test.js src/pages/api/events-delete-birth-guard.test.js src/pages/api/events-create-birth-idempotent.test.js"
   },
   "dependencies": {
     "@astrojs/netlify": "^6.4.0",

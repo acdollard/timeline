@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { isBirthEventRecord } from '../../lib/birthEvent';
 import { deleteEventForUser } from '../../lib/eventPhotoCleanup';
 import { AuthenticationError, getAuthenticatedRequest } from '../../lib/supabase';
 import type { EventPhoto } from '../../types/eventPhotos';
@@ -48,6 +49,60 @@ async function enrichEventPhotos(supabaseClient: any, event: any) {
 function stripReadonlyEventFields(event: any) {
   const { id, user_id, event_types, event_photos, photos, created_at, updated_at, ...updates } = event;
   return updates;
+}
+
+const EVENT_WITH_RELATIONS_SELECT = `
+  *,
+  event_types (
+    id,
+    name,
+    display_name,
+    color,
+    icon
+  ),
+  event_photos (
+    id,
+    event_id,
+    user_id,
+    file_name,
+    file_path,
+    file_size,
+    mime_type,
+    alt_text,
+    sort_order,
+    created_at,
+    updated_at
+  )
+`;
+
+async function requestCreatesBirthEvent(supabaseClient: any, event: any): Promise<boolean> {
+  if (isBirthEventRecord(event)) {
+    return true;
+  }
+
+  if (!event?.event_type_id) {
+    return false;
+  }
+
+  const { data, error } = await supabaseClient
+    .from('event_types')
+    .select('name')
+    .eq('id', event.event_type_id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data?.name === 'birth';
+}
+
+async function findOwnedBirthEvent(supabaseClient: any, userId: string) {
+  const { data, error } = await supabaseClient
+    .from('events')
+    .select(EVENT_WITH_RELATIONS_SELECT)
+    .eq('user_id', userId)
+    .order('date', { ascending: true });
+
+  if (error) throw error;
+  return (data || []).find((row: any) => isBirthEventRecord(row)) ?? null;
 }
 
 export const GET: APIRoute = async ({ params, cookies }) => {
@@ -169,6 +224,23 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   try {
     const { supabaseClient, session } = await getAuthenticatedRequest(cookies);
     const event = stripReadonlyEventFields(await request.json());
+
+    // Birth events are undeletable and anchor the timeline. A second Save after a
+    // dropped 201 (timeout / double-click) used to insert another birth the user
+    // could not remove. Reuse the existing row instead.
+    if (await requestCreatesBirthEvent(supabaseClient, event)) {
+      const existingBirth = await findOwnedBirthEvent(supabaseClient, session.user.id);
+      if (existingBirth) {
+        await enrichEventPhotos(supabaseClient, existingBirth);
+        return new Response(JSON.stringify(existingBirth), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+    }
+
     const { data, error } = await supabaseClient
       .from('events')
       .insert([{ ...event, user_id: session.user.id }])
