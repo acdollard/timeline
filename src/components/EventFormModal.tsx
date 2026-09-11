@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { isBirthEventRecord } from '../lib/birthEvent';
 import type { TimelineEvent } from '../types/events';
 import type { EventType } from '../types/eventTypes';
@@ -42,6 +42,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
   const [showCreateEventTypeModal, setShowCreateEventTypeModal] = useState(false);
   const [birthEventType, setBirthEventType] = useState<EventType | null>(null);
   const [createdEventId, setCreatedEventId] = useState<string | null>(null);
+  const submitInFlightRef = useRef(false);
 
   const resetDraftState = () => {
     setFormData(createEmptyEventDraft(isBirthMode));
@@ -134,11 +135,15 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitInFlightRef.current) {
+      return;
+    }
     if (!formData.event_type_id) {
       setFormError('Please select an event type.');
       return;
     }
-    
+
+    submitInFlightRef.current = true;
     try {
       setFormError(null);
       setIsLoading(true);
@@ -189,6 +194,7 @@ const EventFormModal = ({ isOpen, onClose, onSubmit, onDelete, initialEvent, eve
       console.error('Failed to submit event:', error);
       setFormError('Failed to save event. Please try again.');
     } finally {
+      submitInFlightRef.current = false;
       setIsLoading(false);
     }
   };

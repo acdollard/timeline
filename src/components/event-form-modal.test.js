@@ -18,4 +18,19 @@ describe('EventFormModal birth mode binding', () => {
     const uses = [...source.matchAll(/\bisBirthMode\b/g)];
     assert.ok(uses.length > 1, 'isBirthMode should be used in the modal UI');
   });
+
+  it('guards handleSubmit against in-flight double submits', () => {
+    const source = readFileSync(join(root, 'src/components/EventFormModal.tsx'), 'utf8');
+    assert.match(source, /submitInFlightRef/);
+    const handleSubmitStart = source.indexOf('const handleSubmit');
+    assert.ok(handleSubmitStart >= 0, 'EventFormModal must define handleSubmit');
+    const handleSubmitEnd = source.indexOf('const handleDelete = async', handleSubmitStart);
+    const handleSubmit = source.slice(handleSubmitStart, handleSubmitEnd);
+    assert.match(handleSubmit, /if \(submitInFlightRef\.current\)/);
+    assert.ok(
+      handleSubmit.indexOf('submitInFlightRef.current = true') < handleSubmit.indexOf('await onSubmit'),
+      'Submit lock must be taken before onSubmit so a second Save cannot create another birth event'
+    );
+    assert.match(handleSubmit, /submitInFlightRef\.current = false/);
+  });
 });
